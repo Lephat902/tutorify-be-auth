@@ -1,4 +1,4 @@
-import { Gender, UserRole } from './auth.interfaces';
+import { Gender, UserRole } from "src/user/infrastructure/enums";
 
 export class CreateUserDto {
     readonly email: string;
@@ -12,10 +12,4 @@ export class CreateUserDto {
     readonly role: UserRole;
     readonly address: string;
     readonly wardId: number;
-}
-
-export class LoginDto {
-    public readonly email: string;
-    public readonly username: string;
-    public readonly password: string;
 }

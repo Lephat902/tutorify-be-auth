@@ -1,26 +1,26 @@
 import { ClassSerializerInterceptor, Controller, UseInterceptors } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { CreateUserDto, LoginDto } from './auth.dto';
-import { User } from './user.entity';
-import { AuthService } from './auth.service';
+import { User } from '../infrastructure/user.entity';
+import { UserService } from './user.service';
+import { CreateUserDto, LoginDto } from './dtos';
 
 @Controller()
 @UseInterceptors(ClassSerializerInterceptor)
-export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+export class UserController {
+  constructor(private readonly userService: UserService) { }
 
   @MessagePattern({ cmd: 'getUser' })
   getUser(id: string): Promise<User> {
-    return this.authService.getUser(id);
+    return this.userService.getUser(id);
   }
 
   @MessagePattern({ cmd: 'createUser' })
   createUser(createUserDto: CreateUserDto): Promise<User> {
-    return this.authService.createUser(createUserDto);
+    return this.userService.createUser(createUserDto);
   }
 
   @MessagePattern({ cmd: 'login' })
   login(loginDto: LoginDto): Promise<User> {
-    return this.authService.login(loginDto);
+    return this.userService.login(loginDto);
   }
 }
