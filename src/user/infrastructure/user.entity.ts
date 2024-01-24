@@ -1,9 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Geometry } from 'typeorm';
-import { Gender, UserRole } from './auth.interfaces';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Geometry, BaseEntity } from 'typeorm';
 import { Exclude } from 'class-transformer';
+import { Gender, UserRole } from './enums';
 
 @Entity()
-export class User {
+export class User extends BaseEntity {
     @PrimaryGeneratedColumn('uuid')
     id: string;
   
