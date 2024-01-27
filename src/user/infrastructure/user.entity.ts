@@ -46,7 +46,7 @@ export class User extends BaseEntity {
     createdAt: Date;
   
     @Column({ default: false })
-    isActivated: boolean;
+    emailVerified: boolean;
   
     @Column({ default: false })
     isBlocked: boolean;
