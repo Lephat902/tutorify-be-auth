@@ -3,7 +3,7 @@ import { UserWriteRepository } from 'src/user/infrastructure/repositories';
 import { UserRepository } from 'src/user/domain/user.repository';
 import { VerifyEmailCommand } from '../impl';
 import { ClientProxy } from '@nestjs/microservices';
-import { HttpException, Inject } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 
 @CommandHandler(VerifyEmailCommand)
@@ -19,10 +19,7 @@ export class VerifyEmailHandler implements ICommandHandler<VerifyEmailCommand> {
         const { token } = command;
 
         // If verification is successful, userId is returned
-        const userId = await firstValueFrom(this.client.send<string>({ cmd: 'verify' }, token))
-            .catch((error) => {
-                throw new HttpException(error.message, error.error.status);
-            });
+        const userId = await firstValueFrom(this.client.send<string>({ cmd: 'verify' }, token));
 
         // If successful, set emailVerified of user entity to true
         const user = await this._repository.findOne({ where: { id: userId } });

@@ -28,7 +28,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         transport: Transport.RMQ,
         options: {
           urls: ['amqp://rabbitmq:5672'],
-          queue: 'verification',
+          queue: 'verification-token',
           queueOptions: {
             durable: false
           },
