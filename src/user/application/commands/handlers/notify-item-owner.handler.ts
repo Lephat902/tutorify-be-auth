@@ -12,7 +12,7 @@ export class NotifyItemOwnerHandler
 
   async execute(command: NotifyItemOwnerCommand) {
     const itemModel = this.publisher.mergeObjectContext(
-      await this.userRepository.notifyItemOwner(command.event),
+      this.userRepository.notifyItemOwner(command.event),
     );
 
     itemModel.commit();

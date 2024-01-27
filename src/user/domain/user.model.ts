@@ -1,11 +1,7 @@
 import { AggregateRoot } from '@nestjs/cqrs';
-import {
-  UserCreatedEvent,
-  UserLoggedInEvent,
-} from './events/impl';
 import { UserEventType } from './user-event.type';
-import { ItemOwnerNotifiedEvent } from './events/impl/item-owner-notified.event';
 import { CreateUserDto, LoginDto } from '../application/dtos';
+import { ItemOwnerNotifiedEvent, UserCreatedEvent, UserLoggedInEvent } from './events/impl';
 
 export class User extends AggregateRoot {
   constructor(private readonly id?: number) {

@@ -10,10 +10,10 @@ async function bootstrap() {
       urls: ['amqp://rabbitmq:5672'],
       queue: 'auth',
       queueOptions: {
-        durable: false
+        durable: true
       }
     }
-  })
+  });
   // Use the global exception filter
   app.useGlobalFilters(new GlobalExceptionsFilter());
 
