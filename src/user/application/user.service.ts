@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { User } from '../infrastructure/user.entity';
 import { GetUserQuery } from './queries/impl';
-import { CreateUserCommand, LoginCommand } from './commands/impl';
+import { CreateUserCommand, LoginCommand, VerifyEmailCommand } from './commands/impl';
 import { CreateUserDto, LoginDto } from './dtos';
 
 @Injectable()
@@ -14,6 +14,10 @@ export class UserService {
 
   async getUser(id: string): Promise<User> {
     return this.queryBus.execute(new GetUserQuery({ where: { id: id } }));
+  }
+
+  async verifyEmail(token: string) {
+    return this.commandBus.execute(new VerifyEmailCommand(token));
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {

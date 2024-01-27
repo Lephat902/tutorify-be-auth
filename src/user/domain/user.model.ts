@@ -2,6 +2,7 @@ import { AggregateRoot } from '@nestjs/cqrs';
 import { UserEventType } from './user-event.type';
 import { CreateUserDto, LoginDto } from '../application/dtos';
 import { ItemOwnerNotifiedEvent, UserCreatedEvent, UserLoggedInEvent } from './events/impl';
+import { EmailVerifiedEvent } from './events/impl/email-verified.event';
 
 export class User extends AggregateRoot {
   constructor(private readonly id?: number) {
@@ -10,6 +11,10 @@ export class User extends AggregateRoot {
 
   loginUser(loginDto: LoginDto) {
     this.apply(new UserLoggedInEvent(loginDto));
+  }
+
+  verifyEmail(userId: string) {
+    this.apply(new EmailVerifiedEvent(userId));
   }
 
   createUser(createUserDto: CreateUserDto) {

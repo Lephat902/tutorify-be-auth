@@ -1,4 +1,3 @@
-import { Logger } from '@nestjs/common';
 import { ICommandHandler, CommandHandler, EventPublisher } from '@nestjs/cqrs';
 import * as argon2 from 'argon2';
 import { CreateUserCommand } from '../impl/create-user.command';
@@ -14,8 +13,6 @@ export class CreateUserHandler implements ICommandHandler<CreateUserCommand> {
     ) { }
 
     async execute(command: CreateUserCommand) {
-        Logger.log('Async CreateUserHandler...', 'CreateUserCommand');
-
         const { createUserDto } = command;
 
         const { password, ...otherFields } = createUserDto;
