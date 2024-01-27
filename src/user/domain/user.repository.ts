@@ -15,6 +15,14 @@ export class UserRepository {
     return this.user;
   }
 
+  verifyEmail(userId: string): User {
+    this.user = new User();
+
+    this.user.verifyEmail(userId);
+
+    return this.user;
+  }
+
   createUser(createUserDto: CreateUserDto): User {
     this.user = new User();
 

@@ -14,6 +14,11 @@ export class UserController {
     return this.userService.getUser(id);
   }
 
+  @MessagePattern({ cmd: 'verifyEmail' })
+  verifyEmail(token: string) {
+    return this.userService.verifyEmail(token);
+  }
+
   @MessagePattern({ cmd: 'createUser' })
   createUser(createUserDto: CreateUserDto): Promise<User> {
     return this.userService.createUser(createUserDto);

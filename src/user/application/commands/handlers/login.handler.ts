@@ -1,11 +1,12 @@
 import { ICommandHandler, CommandHandler, EventPublisher } from '@nestjs/cqrs';
 import { LoginCommand } from '../impl/login.command';
 import { UserWriteRepository } from 'src/user/infrastructure/repositories';
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Inject, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UserRepository } from 'src/user/domain/user.repository';
 import * as argon2 from 'argon2';
 import { User } from 'src/user/infrastructure/user.entity';
 import { LoginDto } from '../../dtos';
+import { ClientProxy } from '@nestjs/microservices';
 
 const MAX_LOGIN_FAILURE_ALLOWED = 5;
 
@@ -15,6 +16,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
         private readonly _repository: UserWriteRepository,
         private readonly userRepository: UserRepository,
         private readonly _publisher: EventPublisher,
+        @Inject('MAIL_SERVICE') private readonly client: ClientProxy,
     ) { }
 
     async execute(command: LoginCommand) {
@@ -27,6 +29,17 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
         await this.checkPassword(existingUser, password);
 
         this.handleSuccessfulLogin(loginDto);
+
+        // const res = firstValueFrom(this.client.send({ cmd: 'sendUserConfirmation' }, {
+        //     user: {
+        //         name: 'Phat',
+        //         email: 'phat.le992002@hcmut.edu.vn'
+        //     },
+        //     token: '123'
+        // }))
+        //     .catch((error) => {
+        //         throw new HttpException(error.message, error.error.status);
+        //     });
 
         return existingUser;
     }
