@@ -1,19 +1,20 @@
-import { ICommandHandler, CommandHandler, EventPublisher } from '@nestjs/cqrs';
+import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
+import { UnauthorizedException } from '@nestjs/common';
 import { LoginCommand } from '../impl/login.command';
-import { UserWriteRepository } from 'src/user/infrastructure/repositories';
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { UserRepository } from 'src/user/domain/user.repository';
-import * as argon2 from 'argon2';
-import { User } from 'src/user/infrastructure/user.entity';
 import { LoginDto } from '../../dtos';
+import * as argon2 from 'argon2';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+import { UserRepository } from 'src/user/domain/user.repository';
+import { User, UserDocument } from 'src/user/infrastructure/schemas';
 
 const MAX_LOGIN_FAILURE_ALLOWED = 5;
 
 @CommandHandler(LoginCommand)
 export class LoginHandler implements ICommandHandler<LoginCommand> {
     constructor(
-        private readonly _repository: UserWriteRepository,
         private readonly userRepository: UserRepository,
+        @InjectModel(User.name) private userModel: Model<User>,
         private readonly _publisher: EventPublisher,
     ) { }
 
@@ -26,22 +27,19 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
 
         await this.checkPassword(existingUser, password);
 
-        this.handleSuccessfulLogin(loginDto);
-
+        this.dispatchEvent(loginDto);
         return existingUser;
     }
 
-    private async findUserByEmailOrUsername(email: string, username: string) {
-        const existingUser = await this._repository.findOne({
-            where: email ? { email } : { username }
-        });
-
+    private async findUserByEmailOrUsername(email: string, username: string): Promise<UserDocument> {
+        const existingUser = await this.userModel.findOne({ $or: [{ email }, { username }] }).exec();
+    
         if (!existingUser) {
-            throw new NotFoundException('User not found');
+            throw new UnauthorizedException('User not found');
         }
-
+    
         return existingUser;
-    }
+    }    
 
     private checkUserStatus(user: User) {
         if (user.isBlocked) {
@@ -57,21 +55,21 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
         }
     }
 
-    private async checkPassword(user: User, password: string) {
+    private async checkPassword(user: UserDocument, password: string) {
         const isPasswordValid = await argon2.verify(user.password, password);
 
         if (!isPasswordValid) {
             user.loginFailureCount++;
-            await this._repository.save(user);
+            await user.save();
             throw new UnauthorizedException('Invalid credentials');
         }
 
         // Reset login failure count on successful login
         user.loginFailureCount = 0;
-        await this._repository.save(user);
+        await user.save();
     }
 
-    private handleSuccessfulLogin(loginDto: LoginDto) {
+    private dispatchEvent(loginDto: LoginDto) {
         const userContext = this._publisher.mergeObjectContext(
             this.userRepository.loginUser(loginDto),
         );

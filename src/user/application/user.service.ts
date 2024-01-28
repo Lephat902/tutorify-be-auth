@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { User } from '../infrastructure/user.entity';
 import { GetUserQuery } from './queries/impl';
 import { CreateUserCommand, LoginCommand, VerifyEmailCommand } from './commands/impl';
 import { CreateUserDto, LoginDto } from './dtos';
+import { User } from '../infrastructure/schemas';
 
 @Injectable()
 export class UserService {
@@ -12,19 +12,19 @@ export class UserService {
     private readonly commandBus: CommandBus,
   ) { }
 
-  async getUser(id: string): Promise<User> {
-    return this.queryBus.execute(new GetUserQuery({ where: { id: id } }));
+  getUser(userId: string): Promise<User> {
+    return this.queryBus.execute(new GetUserQuery(userId));
   }
 
-  async verifyEmail(token: string) {
+  verifyEmail(token: string) {
     return this.commandBus.execute(new VerifyEmailCommand(token));
   }
 
-  async createUser(createUserDto: CreateUserDto): Promise<User> {
+  createUser(createUserDto: CreateUserDto): Promise<User> {
     return this.commandBus.execute(new CreateUserCommand(createUserDto));
   }
 
-  async login(loginDto: LoginDto): Promise<User> {
+  login(loginDto: LoginDto) {
     return this.commandBus.execute(new LoginCommand(loginDto));
   }
 }

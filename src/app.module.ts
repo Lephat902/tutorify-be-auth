@@ -8,7 +8,7 @@ import { ConfigModule } from '@nestjs/config';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env', '.env.example'],
-    })
+    }),
   ],
 })
-export class AppModule {}
+export class AppModule { }
