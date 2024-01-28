@@ -1,30 +1,40 @@
 import { Global, Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserReadRepository, UserWriteRepository } from './repositories';
-import { User } from './user.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Student, StudentSchema, Tutor, TutorSchema, User, UserSchema } from './schemas';
 import { ConfigService } from '@nestjs/config';
 
 @Global()
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
-    TypeOrmModule.forRootAsync({
+    MongooseModule.forRootAsync({
+      // without useFactory and async, SECRET cannot be read by configService
       useFactory: async (configService: ConfigService) => ({
-        type: configService.get('DATABASE_TYPE'),
-        url: configService.get('DATABASE_URI'),
-        entities: [User],
-        synchronize: true,
+        uri: configService.get('MONGODB_URI'),
       }),
-      inject: [ConfigService],
+      inject: [ConfigService]
     }),
+    MongooseModule.forFeature([
+      {
+        name: User.name,
+        schema: UserSchema
+      },
+      {
+        name: Tutor.name,
+        schema: TutorSchema
+      },
+      {
+        name: Student.name,
+        schema: StudentSchema
+      },
+    ])
   ],
   providers: [
-    UserReadRepository,
-    UserWriteRepository,
+    MongooseModule,
+    User,
   ],
   exports: [
-    UserReadRepository,
-    UserWriteRepository,
+    MongooseModule,
+    User,
   ]
 })
-export class InfrastructureModule {}
+export class InfrastructureModule { }
