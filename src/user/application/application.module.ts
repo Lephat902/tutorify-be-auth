@@ -6,33 +6,40 @@ import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { InfrastructureModule } from '../infrastructure/infrastructure.module';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     InfrastructureModule,
     CqrsModule,
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: 'MAIL_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: ['amqp://rabbitmq:5672'],
-          queue: 'mail',
-          queueOptions: {
-            durable: false
+        inject: [ConfigService], // Inject ConfigService
+        useFactory: async (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('RABBITMQ_URI')],
+            queue: 'mail',
+            queueOptions: {
+              durable: false,
+            },
           },
-        },
+        }),
       },
       {
         name: 'VERIFICATION_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: ['amqp://rabbitmq:5672'],
-          queue: 'verification-token',
-          queueOptions: {
-            durable: false
+        inject: [ConfigService], // Inject ConfigService
+        useFactory: async (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('RABBITMQ_URI')],
+            queue: 'verification-token',
+            queueOptions: {
+              durable: false,
+            },
           },
-        },
+        }),
       },
     ]),
   ],
