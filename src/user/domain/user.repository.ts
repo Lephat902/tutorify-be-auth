@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { User } from './user.model';
 import { UserEventType } from './user-event.type';
-import { CreateUserDto, LoginDto } from '../application/dtos';
+import { CreateBaseUserDto, LoginDto } from '../application/dtos';
 
 @Injectable()
 export class UserRepository {
@@ -23,7 +23,7 @@ export class UserRepository {
     return this.user;
   }
 
-  createUser(createUserDto: CreateUserDto): User {
+  createUser(createUserDto: CreateBaseUserDto): User {
     this.user = new User();
 
     this.user.createUser(createUserDto);

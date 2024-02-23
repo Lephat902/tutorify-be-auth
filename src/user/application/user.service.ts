@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetUserQuery } from './queries/impl';
-import { CreateUserCommand, LoginCommand, VerifyEmailCommand } from './commands/impl';
-import { CreateUserDto, LoginDto } from './dtos';
+import { LoginCommand, VerifyEmailCommand } from './commands/impl';
+import { CreateBaseUserDto, LoginDto } from './dtos';
 import { User } from '../infrastructure/schemas';
+import { CreateUserSaga } from './sagas/impl';
 
 @Injectable()
 export class UserService {
@@ -20,8 +21,8 @@ export class UserService {
     return this.commandBus.execute(new VerifyEmailCommand(token));
   }
 
-  createUser(createUserDto: CreateUserDto): Promise<User> {
-    return this.commandBus.execute(new CreateUserCommand(createUserDto));
+  createUser(createUserDto: CreateBaseUserDto): Promise<User> {
+    return this.commandBus.execute(new CreateUserSaga(createUserDto));
   }
 
   login(loginDto: LoginDto) {

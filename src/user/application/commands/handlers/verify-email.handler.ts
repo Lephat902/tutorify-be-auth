@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from 'src/user/infrastructure/schemas';
+import { QueueNames } from '@tutorify/shared';
 
 @CommandHandler(VerifyEmailCommand)
 export class VerifyEmailHandler implements ICommandHandler<VerifyEmailCommand> {
@@ -14,7 +15,7 @@ export class VerifyEmailHandler implements ICommandHandler<VerifyEmailCommand> {
         @InjectModel(User.name) private readonly userModel: Model<User>,
         private readonly userRepository: UserRepository,
         private readonly _publisher: EventPublisher,
-        @Inject('VERIFICATION_SERVICE') private readonly client: ClientProxy,
+        @Inject(QueueNames.VERIFICATION_TOKEN) private readonly client: ClientProxy,
     ) { }
 
     async execute(command: VerifyEmailCommand) {

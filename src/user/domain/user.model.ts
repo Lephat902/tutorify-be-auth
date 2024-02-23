@@ -1,6 +1,6 @@
 import { AggregateRoot } from '@nestjs/cqrs';
 import { UserEventType } from './user-event.type';
-import { CreateUserDto, LoginDto } from '../application/dtos';
+import { CreateBaseUserDto, LoginDto } from '../application/dtos';
 import { ItemOwnerNotifiedEvent, UserCreatedEvent, UserLoggedInEvent } from './events/impl';
 import { EmailVerifiedEvent } from './events/impl/email-verified.event';
 
@@ -17,7 +17,7 @@ export class User extends AggregateRoot {
     this.apply(new EmailVerifiedEvent(userId));
   }
 
-  createUser(createUserDto: CreateUserDto) {
+  createUser(createUserDto: CreateBaseUserDto) {
     this.apply(new UserCreatedEvent(createUserDto));
   }
 
