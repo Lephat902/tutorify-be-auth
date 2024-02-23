@@ -1,7 +1,7 @@
 import { Controller, UseInterceptors } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
-import { CreateUserDto, LoginDto } from './dtos';
+import { CreateBaseUserDto, LoginDto } from './dtos';
 import MongooseClassSerializerInterceptor from './interceptors/mongoose-class-serializer.interceptor';
 import { User } from '../infrastructure/schemas';
 @Controller()
@@ -20,7 +20,7 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'createUser' })
-  createUser(createUserDto: CreateUserDto) {
+  createUser(createUserDto: CreateBaseUserDto) {
     return this.userService.createUser(createUserDto);
   }
 

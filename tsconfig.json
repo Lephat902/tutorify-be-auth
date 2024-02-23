@@ -16,6 +16,20 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false,
+    "resolveJsonModule": true, // help VSCode to autocomplete and suggest quick-fixes
+    "paths": {
+      "@tutorify/shared": [
+        "../shared/src"
+      ],
+      "@tutorify/shared/*": [
+        "../shared/src/*"
+      ]
+    }
+  },
+  "exclude": [
+    "test-fixtures",
+    "node_modules",
+    "source/test.ts"
+  ]
 }

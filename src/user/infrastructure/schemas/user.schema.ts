@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { Exclude, Expose, Transform } from 'class-transformer';
-import { Gender, UserRole } from '../enums';
+import { Gender, UserRole } from '@tutorify/shared';
 
 export type UserDocument = HydratedDocument<User>;
 
