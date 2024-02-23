@@ -11,6 +11,7 @@ import { QueueNames } from '@tutorify/shared';
 import { SagaModule } from 'nestjs-saga';
 import { SagaHandlers } from './sagas/handlers';
 import { HttpModule } from '@nestjs/axios';
+import { FileServiceClient } from './helpers/file-service-client.helper';
 
 @Module({
   imports: [
@@ -53,7 +54,7 @@ import { HttpModule } from '@nestjs/axios';
     ]),
   ],
   controllers: [UserController],
-  providers: [...CommandHandlers, ...QueryHandlers, UserService],
-  exports: [ClientsModule],
+  providers: [...CommandHandlers, ...QueryHandlers, UserService, FileServiceClient],
+  exports: [ClientsModule, FileServiceClient],
 })
 export class ApplicationModule { }
