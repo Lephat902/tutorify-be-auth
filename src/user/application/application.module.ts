@@ -56,6 +56,6 @@ import { FileServiceClient } from './helpers/file-service-client.helper';
   ],
   controllers: [UserController],
   providers: [...CommandHandlers, ...QueryHandlers, UserService, FileServiceClient],
-  exports: [ClientsModule, FileServiceClient],
+  exports: [ClientsModule, FileServiceClient, BroadcastModule],
 })
 export class ApplicationModule { }
