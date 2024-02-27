@@ -1,5 +1,4 @@
-import { ICommandHandler, CommandHandler, EventPublisher } from '@nestjs/cqrs';
-import { UserRepository } from 'src/user/domain/user.repository';
+import { ICommandHandler, CommandHandler } from '@nestjs/cqrs';
 import { VerifyEmailCommand } from '../impl';
 import { ClientProxy } from '@nestjs/microservices';
 import { Inject } from '@nestjs/common';
@@ -7,14 +6,14 @@ import { firstValueFrom } from 'rxjs';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from 'src/user/infrastructure/schemas';
-import { QueueNames } from '@tutorify/shared';
+import { BroadcastService, QueueNames, UserEmailVerifiedEvent, UserEmailVerifiedEventPayload } from '@tutorify/shared';
+import { Builder } from 'builder-pattern';
 
 @CommandHandler(VerifyEmailCommand)
 export class VerifyEmailHandler implements ICommandHandler<VerifyEmailCommand> {
     constructor(
         @InjectModel(User.name) private readonly userModel: Model<User>,
-        private readonly userRepository: UserRepository,
-        private readonly _publisher: EventPublisher,
+        private readonly broadcastService: BroadcastService,
         @Inject(QueueNames.VERIFICATION_TOKEN) private readonly client: ClientProxy,
     ) { }
 
@@ -31,15 +30,16 @@ export class VerifyEmailHandler implements ICommandHandler<VerifyEmailCommand> {
             await user.save();
         }
 
-        this.handleSuccessfulEmailVerified(userId);
+        this.dispatchEvent(userId);
 
-	return true;
+        return true;
     }
 
-    private handleSuccessfulEmailVerified(userId: string) {
-        const userContext = this._publisher.mergeObjectContext(
-            this.userRepository.verifyEmail(userId),
-        );
-        userContext.commit();
+    private dispatchEvent(userId: string) {
+        const eventPayload = Builder<UserEmailVerifiedEventPayload>()
+            .userId(userId)
+            .build();
+        const event = new UserEmailVerifiedEvent(eventPayload);
+        this.broadcastService.broadcastEventToAllMicroservices(event.pattern, event.payload);
     }
 }

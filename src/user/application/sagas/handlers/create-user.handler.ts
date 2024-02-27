@@ -6,10 +6,11 @@ import { CreateUserSaga } from '../impl/create-user.saga';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { User, Tutor, Student, UserDocument } from 'src/user/infrastructure/schemas';
-import { QueueNames, UserRole } from '@tutorify/shared';
-import { Builder, Saga } from 'nestjs-saga';
+import { BroadcastService, QueueNames, UserCreatedEvent, UserCreatedEventPayload, UserRole } from '@tutorify/shared';
+import { Builder as SagaBuilder, Saga } from 'nestjs-saga';
 import { FileServiceClient } from '../../helpers/file-service-client.helper';
 import { CreateTutorDto, FileUploadResponseDto } from '../../dtos';
+import { Builder } from 'builder-pattern';
 
 @Saga(CreateUserSaga)
 export class CreateUserSagaHandler {
@@ -20,13 +21,14 @@ export class CreateUserSagaHandler {
         @Inject(QueueNames.MAILER) private readonly mailClient: ClientProxy,
         @Inject(QueueNames.VERIFICATION_TOKEN) private readonly tokenClient: ClientProxy,
         private readonly fileServiceClient: FileServiceClient,
+        private readonly broadcastService: BroadcastService,
     ) { }
     private avatarUploadResult: FileUploadResponseDto;
     private portfoliosUploadResult: FileUploadResponseDto[];
     private savedUser: User;
     private token: string;
 
-    saga = new Builder<CreateUserSaga, User>()
+    saga = new SagaBuilder<CreateUserSaga, User>()
 
         .step('Validate user data')
         .invoke(this.step1)
@@ -49,6 +51,9 @@ export class CreateUserSagaHandler {
 
         .step('Send verification email along with token from previous step')
         .invoke(this.step6)
+
+        .step('Dispatch user-created event')
+        .invoke(this.step7)
 
         .return(this.buildResult)
 
@@ -117,7 +122,7 @@ export class CreateUserSagaHandler {
 
     async step5(cmd: CreateUserSaga) {
         this.token = await firstValueFrom(
-            this.tokenClient.send<string>({ cmd: 'insert' }, this.savedUser._id)
+            this.tokenClient.send<string>({ cmd: 'insert' }, this.savedUser._id.toString())
         );
     }
 
@@ -128,6 +133,19 @@ export class CreateUserSagaHandler {
                 token: this.token,
             })
         );
+    }
+
+    step7(cmd: CreateUserSaga) {
+        const eventPayload = Builder<UserCreatedEventPayload>()
+            .userId(this.savedUser._id.toString())
+            .email(this.savedUser.email)
+            .username(this.savedUser.username)
+            .firstName(this.savedUser.firstName)
+            .lastName(this.savedUser.lastName)
+            .role(this.savedUser.role)
+            .build();
+        const event = new UserCreatedEvent(eventPayload);
+        this.broadcastService.broadcastEventToAllMicroservices(event.pattern, event.payload);
     }
 
     async step2Compensation(cmd: CreateUserSaga) {
@@ -147,7 +165,7 @@ export class CreateUserSagaHandler {
 
     async step5Compensation(cmd: CreateUserSaga) {
         this.token = await firstValueFrom(
-            this.tokenClient.send<string>({ cmd: 'deleteAll' }, this.savedUser._id)
+            this.tokenClient.send<string>({ cmd: 'deleteAll' }, this.savedUser._id.toString())
         );
     }
 

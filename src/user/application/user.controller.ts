@@ -4,14 +4,20 @@ import { UserService } from './user.service';
 import { CreateBaseUserDto, LoginDto } from './dtos';
 import MongooseClassSerializerInterceptor from './interceptors/mongoose-class-serializer.interceptor';
 import { User } from '../infrastructure/schemas';
+import { UserQueryDto } from './dtos';
 @Controller()
 @UseInterceptors(MongooseClassSerializerInterceptor(User))
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
-  @MessagePattern({ cmd: 'getUser' })
-  getUser(id: string): Promise<User> {
-    return this.userService.getUser(id);
+  @MessagePattern({ cmd: 'getUserById' })
+  getUserById(id: string): Promise<User> {
+    return this.userService.getUserById(id);
+  }
+
+  @MessagePattern({ cmd: 'getUsers' })
+  getUsers(filters: UserQueryDto): Promise<User[]> {
+    return this.userService.getUsers(filters);
   }
 
   @MessagePattern({ cmd: 'verifyEmail' })

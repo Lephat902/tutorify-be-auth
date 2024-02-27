@@ -1,7 +1,7 @@
-import { GetUserHandler } from './get-user.handler';
+import { GetUserByIdHandler } from './get-user-by-id.handler';
 import { GetUsersHandler } from './get-users.handler';
 
 export const QueryHandlers = [
-    GetUserHandler,
+    GetUserByIdHandler,
     GetUsersHandler
 ]

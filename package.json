@@ -20,7 +20,6 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@golevelup/nestjs-rabbitmq": "^4.1.0",
     "@nestjs/axios": "^3.0.2",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.1.1",
@@ -31,6 +30,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "argon2": "^0.31.2",
     "axios": "^1.6.7",
+    "builder-pattern": "^2.2.0",
     "class-transformer": "^0.5.1",
     "mongoose": "^8.1.1",
     "nestjs-saga": "^0.2.0",

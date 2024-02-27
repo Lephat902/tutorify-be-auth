@@ -1,21 +1,20 @@
-import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UnauthorizedException } from '@nestjs/common';
 import { LoginCommand } from '../impl/login.command';
-import { LoginDto } from '../../dtos';
 import * as argon2 from 'argon2';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { UserRepository } from 'src/user/domain/user.repository';
 import { User, UserDocument } from 'src/user/infrastructure/schemas';
+import { BroadcastService, LoginStatus, UserLoggedInEvent, UserLoggedInEventPayload } from '@tutorify/shared';
+import { Builder } from 'builder-pattern';
 
 const MAX_LOGIN_FAILURE_ALLOWED = 5;
 
 @CommandHandler(LoginCommand)
 export class LoginHandler implements ICommandHandler<LoginCommand> {
     constructor(
-        private readonly userRepository: UserRepository,
         @InjectModel(User.name) private userModel: Model<User>,
-        private readonly _publisher: EventPublisher,
+        private readonly broadcastService: BroadcastService,
     ) { }
 
     async execute(command: LoginCommand) {
@@ -25,21 +24,26 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
         const existingUser = await this.findUserByEmailOrUsername(email, username);
         this.checkUserStatus(existingUser);
 
-        await this.checkPassword(existingUser, password);
+        const successfulLogin = await this.checkPassword(existingUser, password);
 
-        this.dispatchEvent(loginDto);
+        const loginStatus = successfulLogin ? LoginStatus.SUCCESSFUL : LoginStatus.FAILED;
+        this.dispatchEvent(existingUser.id, loginStatus);
+        if (!successfulLogin) {
+            throw new UnauthorizedException('Invalid credentials');
+        }
+
         return existingUser;
     }
 
     private async findUserByEmailOrUsername(email: string, username: string): Promise<UserDocument> {
         const existingUser = await this.userModel.findOne({ $or: [{ email }, { username }] }).exec();
-    
+
         if (!existingUser) {
             throw new UnauthorizedException('User not found');
         }
-    
+
         return existingUser;
-    }    
+    }
 
     private checkUserStatus(user: User) {
         if (user.isBlocked) {
@@ -60,19 +64,22 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
 
         if (!isPasswordValid) {
             user.loginFailureCount++;
-            await user.save();
-            throw new UnauthorizedException('Invalid credentials');
+            user.save();
+            return false;
         }
 
         // Reset login failure count on successful login
         user.loginFailureCount = 0;
-        await user.save();
+        user.save();
+        return true;
     }
 
-    private dispatchEvent(loginDto: LoginDto) {
-        const userContext = this._publisher.mergeObjectContext(
-            this.userRepository.loginUser(loginDto),
-        );
-        userContext.commit();
+    private dispatchEvent(userId: string, status: LoginStatus) {
+        const eventPayload = Builder<UserLoggedInEventPayload>()
+            .userId(userId)
+            .status(status)
+            .build();
+        const event = new UserLoggedInEvent(eventPayload);
+        this.broadcastService.broadcastEventToAllMicroservices(event.pattern, event.payload);
     }
 }
