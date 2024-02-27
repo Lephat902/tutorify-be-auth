@@ -56,7 +56,7 @@ export class User {
     address: string;
 
     @Prop()
-    wardId: number;
+    wardId: string;
 
     @Prop({ type: { type: String, default: 'Point' }, coordinates: [Number] })
     @Exclude()

@@ -7,7 +7,7 @@ export class CreateBaseUserDto {
     readonly gender: Gender;
     readonly phoneNumber: string;
     readonly address: string;
-    readonly wardId: number;
+    readonly wardId: string;
     readonly firstName: string;
     readonly middleName: string;
     readonly lastName: string;
