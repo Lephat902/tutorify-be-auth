@@ -1,5 +1,5 @@
 import { IQuery } from '@nestjs/cqrs';
 
-export class GetUserQuery implements IQuery {
+export class GetUserByIdQuery implements IQuery {
     constructor(public readonly userId: string) { }
 }

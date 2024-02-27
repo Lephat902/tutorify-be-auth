@@ -7,7 +7,7 @@ import { UserController } from './user.controller';
 import { InfrastructureModule } from '../infrastructure/infrastructure.module';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { QueueNames } from '@tutorify/shared';
+import { BroadcastModule, QueueNames } from '@tutorify/shared';
 import { SagaModule } from 'nestjs-saga';
 import { SagaHandlers } from './sagas/handlers';
 import { HttpModule } from '@nestjs/axios';
@@ -18,6 +18,7 @@ import { FileServiceClient } from './helpers/file-service-client.helper';
     HttpModule,
     InfrastructureModule,
     CqrsModule,
+    BroadcastModule,
     SagaModule.register({
       imports: [ApplicationModule],
       sagas: SagaHandlers,
