@@ -1,21 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { User, UserSchema } from './user.schema';
-
-// Define the portfolio item schema using Schema class
-@Schema()
-export class PortfolioItemSchema {
-    @Prop({ required: true })
-    id: string;
-
-    @Prop({ required: true })
-    url: string;
-
-    @Prop({ required: true })
-    title: string;
-
-    @Prop({ required: true })
-    size: number;
-}
+import { FileSchema } from './file.schema';
 
 @Schema()
 export class Tutor extends User {
@@ -43,8 +28,8 @@ export class Tutor extends User {
     @Prop({ nullable: true })
     graduationYear: number;
 
-    @Prop([PortfolioItemSchema])
-    tutorPortfolios: PortfolioItemSchema[];
+    @Prop([FileSchema])
+    tutorPortfolios: FileSchema[];
 }
 
 // Create a discriminator
