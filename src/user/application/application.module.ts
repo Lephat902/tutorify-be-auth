@@ -10,12 +10,9 @@ import { ConfigService } from '@nestjs/config';
 import { BroadcastModule, QueueNames } from '@tutorify/shared';
 import { SagaModule } from 'nestjs-saga';
 import { SagaHandlers } from './sagas/handlers';
-import { HttpModule } from '@nestjs/axios';
-import { FileServiceClient } from './helpers/file-service-client.helper';
 
 @Module({
   imports: [
-    HttpModule,
     InfrastructureModule,
     CqrsModule,
     BroadcastModule,
@@ -52,10 +49,24 @@ import { FileServiceClient } from './helpers/file-service-client.helper';
           },
         }),
       },
+      {
+        name: QueueNames.FILE,
+        inject: [ConfigService], // Inject ConfigService
+        useFactory: async (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('RABBITMQ_URI')],
+            queue: QueueNames.FILE,
+            queueOptions: {
+              durable: false,
+            },
+          },
+        }),
+      },
     ]),
   ],
   controllers: [UserController],
-  providers: [...CommandHandlers, ...QueryHandlers, UserService, FileServiceClient],
-  exports: [ClientsModule, FileServiceClient, BroadcastModule],
+  providers: [...CommandHandlers, ...QueryHandlers, UserService],
+  exports: [ClientsModule, BroadcastModule],
 })
 export class ApplicationModule { }
