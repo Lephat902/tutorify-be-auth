@@ -8,7 +8,8 @@ import { firstValueFrom } from 'rxjs';
 import { User, Tutor, Student, UserDocument } from 'src/user/infrastructure/schemas';
 import { BroadcastService, QueueNames, UserCreatedEvent, UserCreatedEventPayload, UserRole } from '@tutorify/shared';
 import { Builder as SagaBuilder, Saga } from 'nestjs-saga';
-import { FileServiceClient } from '../../helpers/file-service-client.helper';
+import { QueueNames, UserRole } from '@tutorify/shared';
+import { Builder, Saga } from 'nestjs-saga';
 import { CreateTutorDto, FileUploadResponseDto } from '../../dtos';
 import { Builder } from 'builder-pattern';
 
@@ -20,8 +21,8 @@ export class CreateUserSagaHandler {
         @InjectModel(Student.name) private readonly studentModel: Model<Student>,
         @Inject(QueueNames.MAILER) private readonly mailClient: ClientProxy,
         @Inject(QueueNames.VERIFICATION_TOKEN) private readonly tokenClient: ClientProxy,
-        private readonly fileServiceClient: FileServiceClient,
         private readonly broadcastService: BroadcastService,
+        @Inject(QueueNames.FILE) private readonly fileClient: ClientProxy,
     ) { }
     private avatarUploadResult: FileUploadResponseDto = null;
     private portfoliosUploadResult: FileUploadResponseDto[] = [];
@@ -78,8 +79,7 @@ export class CreateUserSagaHandler {
 
     async step2(cmd: CreateUserSaga) {
         const { avatar } = cmd.createBaseUserDto;
-        if (avatar)
-            this.avatarUploadResult = await this.fileServiceClient.uploadSingleFile(avatar);
+        this.avatarUploadResult = await firstValueFrom(this.fileClient.send({cmd: 'uploadSingleFile'}, {file: avatar}));
     }
 
     async step3(cmd: CreateUserSaga) {
@@ -88,8 +88,7 @@ export class CreateUserSagaHandler {
         if (role === UserRole.TUTOR) {
             const createTutorDto = createBaseUserDto as CreateTutorDto;
             const { portfolios } = createTutorDto;
-            if (portfolios)
-                this.portfoliosUploadResult = await this.fileServiceClient.uploadMultipleFiles(portfolios);
+            this.portfoliosUploadResult = await firstValueFrom(this.fileClient.send({cmd:'uploadMultipleFiles'}, {files: portfolios}));
         }
     }
 
@@ -162,13 +161,16 @@ export class CreateUserSagaHandler {
     }
 
     async step2Compensation(cmd: CreateUserSaga) {
-        await this.fileServiceClient.deleteSingleFile(this.avatarUploadResult.id);
+        await firstValueFrom(this.fileClient.send({cmd: 'deleteSingleFile'},  this.avatarUploadResult.id));
     }
 
-    async step3Compensation(cmd: CreateUserSaga) {
-        if (!this.portfoliosUploadResult) {
+    async step3Compensation(cmd: CreateUserSaga) { console.log('step3Compen',
+        this.portfoliosUploadResult
+    )
+        if (this.portfoliosUploadResult?.length) {
+           
             const idsToDelete = this.portfoliosUploadResult.map(portpolio => portpolio.id);
-            await this.fileServiceClient.deleteMultipleFiles(idsToDelete);
+            await firstValueFrom(this.fileClient.send({cmd: 'deleteMultipleFiles'}, idsToDelete));
         }
     }
 
