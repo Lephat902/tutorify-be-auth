@@ -23,8 +23,8 @@ export class CreateUserSagaHandler {
         private readonly fileServiceClient: FileServiceClient,
         private readonly broadcastService: BroadcastService,
     ) { }
-    private avatarUploadResult: FileUploadResponseDto;
-    private portfoliosUploadResult: FileUploadResponseDto[];
+    private avatarUploadResult: FileUploadResponseDto = null;
+    private portfoliosUploadResult: FileUploadResponseDto[] = [];
     private savedUser: User;
     private token: string;
 
@@ -78,7 +78,8 @@ export class CreateUserSagaHandler {
 
     async step2(cmd: CreateUserSaga) {
         const { avatar } = cmd.createBaseUserDto;
-        this.avatarUploadResult = await this.fileServiceClient.uploadSingleFile(avatar);
+        if (avatar)
+            this.avatarUploadResult = await this.fileServiceClient.uploadSingleFile(avatar);
     }
 
     async step3(cmd: CreateUserSaga) {
@@ -87,7 +88,8 @@ export class CreateUserSagaHandler {
         if (role === UserRole.TUTOR) {
             const createTutorDto = createBaseUserDto as CreateTutorDto;
             const { portfolios } = createTutorDto;
-            this.portfoliosUploadResult = await this.fileServiceClient.uploadMultipleFiles(portfolios);
+            if (portfolios)
+                this.portfoliosUploadResult = await this.fileServiceClient.uploadMultipleFiles(portfolios);
         }
     }
 
@@ -100,13 +102,17 @@ export class CreateUserSagaHandler {
         const userToSave = {
             ...createBaseUserDto,
             password: hashedPassword,
-        };
+            avatar: this.avatarUploadResult,
+        } as User;
         let newUser: UserDocument;
 
         // Create a new user instance based on the role
         switch (role) {
             case UserRole.TUTOR:
-                newUser = new this.tutorModel(userToSave);
+                newUser = new this.tutorModel({
+                    ...userToSave,
+                    tutorPortfolios: this.portfoliosUploadResult,
+                } as Tutor);
                 break;
             case UserRole.STUDENT:
                 newUser = new this.studentModel(userToSave);

@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { Gender, UserRole } from '@tutorify/shared';
+import { FileSchema } from './file.schema';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -40,8 +41,8 @@ export class User {
     @Prop({ default: '' })
     phoneNumber: string;
 
-    @Prop({ default: '' })
-    imgUrl: string;
+    @Prop({type: FileSchema, required: false})
+    avatar: FileSchema;
 
     @Prop({ enum: Object.values(UserRole), default: UserRole.STUDENT })
     role: UserRole;
@@ -59,7 +60,6 @@ export class User {
     wardId: string;
 
     @Prop({ type: { type: String, default: 'Point' }, coordinates: [Number] })
-    @Exclude()
     location: { type: string, coordinates: number[] };
 }
 
