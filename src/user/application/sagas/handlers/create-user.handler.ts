@@ -142,6 +142,12 @@ export class CreateUserSagaHandler {
     }
 
     step7(cmd: CreateUserSaga) {
+        let proficienciesIds: string[];
+        if (this.savedUser.role === UserRole.TUTOR) {
+            const { createBaseUserDto } = cmd;
+            const createTutorDto = createBaseUserDto as CreateTutorDto;
+            proficienciesIds = createTutorDto.proficienciesIds;
+        }
         const eventPayload = Builder<UserCreatedEventPayload>()
             .userId(this.savedUser._id.toString())
             .email(this.savedUser.email)
@@ -149,6 +155,7 @@ export class CreateUserSagaHandler {
             .firstName(this.savedUser.firstName)
             .lastName(this.savedUser.lastName)
             .role(this.savedUser.role)
+            .proficienciesIds(proficienciesIds)
             .build();
         const event = new UserCreatedEvent(eventPayload);
         this.broadcastService.broadcastEventToAllMicroservices(event.pattern, event.payload);
