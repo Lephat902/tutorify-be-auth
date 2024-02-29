@@ -4,8 +4,8 @@ import { LoginCommand } from '../impl/login.command';
 import * as argon2 from 'argon2';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from 'src/user/infrastructure/schemas';
-import { BroadcastService, LoginStatus, UserLoggedInEvent, UserLoggedInEventPayload } from '@tutorify/shared';
+import { Tutor, User, UserDocument } from 'src/user/infrastructure/schemas';
+import { BroadcastService, LoginStatus, UserLoggedInEvent, UserLoggedInEventPayload, UserRole } from '@tutorify/shared';
 import { Builder } from 'builder-pattern';
 
 const MAX_LOGIN_FAILURE_ALLOWED = 5;
@@ -56,6 +56,21 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
 
         if (user.loginFailureCount > MAX_LOGIN_FAILURE_ALLOWED) {
             throw new UnauthorizedException('Account locked due to multiple login failures');
+        }
+
+        this.checkRoleSpecificStatus(user);
+    }
+
+    private checkRoleSpecificStatus(user: User) {
+        const userRole = user.role;
+        if (userRole === UserRole.TUTOR) {
+            this.checkTutorStatus(user as Tutor);
+        }
+    }
+
+    private checkTutorStatus(tutor: Tutor) {
+        if (!tutor.isApproved) {
+            throw new UnauthorizedException('Tutor account not approved yet');
         }
     }
 
