@@ -1,10 +1,9 @@
 import { Controller, UseInterceptors } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
-import { CreateBaseUserDto, LoginDto } from './dtos';
+import { CreateBaseUserDto, LoginDto , UserQueryDto } from './dtos';
 import MongooseClassSerializerInterceptor from './interceptors/mongoose-class-serializer.interceptor';
 import { User } from '../infrastructure/schemas';
-import { UserQueryDto } from './dtos';
 @Controller()
 @UseInterceptors(MongooseClassSerializerInterceptor(User))
 export class UserController {
@@ -33,5 +32,20 @@ export class UserController {
   @MessagePattern({ cmd: 'login' })
   login(loginDto: LoginDto) {
     return this.userService.login(loginDto);
+  }
+
+  @MessagePattern({ cmd: 'approveTutor' })
+  approveTutor(tutorId: string) {
+    return this.userService.approveTutor(tutorId);
+  }
+
+  @MessagePattern({ cmd: 'blockUser' })
+  blockUser(userId: string) {
+    return this.userService.blockUser(userId);
+  }
+
+  @MessagePattern({ cmd: 'unblockUser' })
+  unblockUser(userId: string) {
+    return this.userService.unblockUser(userId);
   }
 }
