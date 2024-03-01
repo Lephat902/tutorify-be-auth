@@ -8,8 +8,6 @@ import { firstValueFrom } from 'rxjs';
 import { User, Tutor, Student, UserDocument } from 'src/user/infrastructure/schemas';
 import { BroadcastService, QueueNames, UserCreatedEvent, UserCreatedEventPayload, UserRole } from '@tutorify/shared';
 import { Builder as SagaBuilder, Saga } from 'nestjs-saga';
-import { QueueNames, UserRole } from '@tutorify/shared';
-import { Builder, Saga } from 'nestjs-saga';
 import { CreateTutorDto, FileUploadResponseDto } from '../../dtos';
 import { Builder } from 'builder-pattern';
 
@@ -79,7 +77,8 @@ export class CreateUserSagaHandler {
 
     async step2(cmd: CreateUserSaga) {
         const { avatar } = cmd.createBaseUserDto;
-        this.avatarUploadResult = await firstValueFrom(this.fileClient.send({cmd: 'uploadSingleFile'}, {file: avatar}));
+        if (avatar)
+            this.avatarUploadResult = await firstValueFrom(this.fileClient.send({ cmd: 'uploadSingleFile' }, { file: avatar }));
     }
 
     async step3(cmd: CreateUserSaga) {
@@ -88,7 +87,8 @@ export class CreateUserSagaHandler {
         if (role === UserRole.TUTOR) {
             const createTutorDto = createBaseUserDto as CreateTutorDto;
             const { portfolios } = createTutorDto;
-            this.portfoliosUploadResult = await firstValueFrom(this.fileClient.send({cmd:'uploadMultipleFiles'}, {files: portfolios}));
+            if (portfolios)
+                this.portfoliosUploadResult = await firstValueFrom(this.fileClient.send({ cmd: 'uploadMultipleFiles' }, { files: portfolios }));
         }
     }
 
@@ -161,16 +161,17 @@ export class CreateUserSagaHandler {
     }
 
     async step2Compensation(cmd: CreateUserSaga) {
-        await firstValueFrom(this.fileClient.send({cmd: 'deleteSingleFile'},  this.avatarUploadResult.id));
+        await firstValueFrom(this.fileClient.send({ cmd: 'deleteSingleFile' }, this.avatarUploadResult.id));
     }
 
-    async step3Compensation(cmd: CreateUserSaga) { console.log('step3Compen',
-        this.portfoliosUploadResult
-    )
+    async step3Compensation(cmd: CreateUserSaga) {
+        console.log('step3Compen',
+            this.portfoliosUploadResult
+        )
         if (this.portfoliosUploadResult?.length) {
-           
+
             const idsToDelete = this.portfoliosUploadResult.map(portpolio => portpolio.id);
-            await firstValueFrom(this.fileClient.send({cmd: 'deleteMultipleFiles'}, idsToDelete));
+            await firstValueFrom(this.fileClient.send({ cmd: 'deleteMultipleFiles' }, idsToDelete));
         }
     }
 
