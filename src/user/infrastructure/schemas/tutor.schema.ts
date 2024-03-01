@@ -30,6 +30,9 @@ export class Tutor extends User {
 
     @Prop([FileSchema])
     tutorPortfolios: FileSchema[];
+
+    @Prop([String])
+    socialProfiles: string[];
 }
 
 // Create a discriminator

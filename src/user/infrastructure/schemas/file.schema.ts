@@ -1,6 +1,6 @@
 import { Prop, Schema } from "@nestjs/mongoose";
 
-// Define the portfolio item schema using Schema class
+// Define the file item schema using Schema class
 @Schema()
 export class FileSchema {
     @Prop({ required: true })
