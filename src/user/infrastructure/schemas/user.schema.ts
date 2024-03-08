@@ -35,7 +35,7 @@ export class User {
     @Prop({ default: '' })
     lastName: string;
 
-    @Prop({ enum: Object.values(Gender), default: null })
+    @Prop({ enum: Object.values(Gender).concat([null]) })
     gender: Gender;
 
     @Prop({ default: '' })
@@ -53,10 +53,10 @@ export class User {
     @Prop({ default: false })
     isBlocked: boolean;
 
-    @Prop()
+    @Prop({ default: null })
     address: string;
 
-    @Prop()
+    @Prop({ default: null })
     wardId: string;
 
     @Prop({ type: { type: String, default: 'Point' }, coordinates: [Number] })

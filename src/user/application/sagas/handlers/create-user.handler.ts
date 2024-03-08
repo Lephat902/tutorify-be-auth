@@ -94,7 +94,7 @@ export class CreateUserSagaHandler {
 
     async step4(cmd: CreateUserSaga) {
         const { createBaseUserDto } = cmd;
-        const { password, role } = createBaseUserDto;
+        const { password, role, gender } = createBaseUserDto;
 
         // Hash the provided password using argon2
         const hashedPassword = await argon2.hash(password);
@@ -102,6 +102,7 @@ export class CreateUserSagaHandler {
             ...createBaseUserDto,
             password: hashedPassword,
             avatar: this.avatarUploadResult,
+	    gender: gender || null,
         } as User;
         let newUser: UserDocument;
 
@@ -161,15 +162,13 @@ export class CreateUserSagaHandler {
     }
 
     async step2Compensation(cmd: CreateUserSaga) {
-        await firstValueFrom(this.fileClient.send({ cmd: 'deleteSingleFile' }, this.avatarUploadResult.id));
+	if (this.avatarUploadResult) {
+            await firstValueFrom(this.fileClient.send({ cmd: 'deleteSingleFile' }, this.avatarUploadResult.id));
+	}
     }
 
     async step3Compensation(cmd: CreateUserSaga) {
-        console.log('step3Compen',
-            this.portfoliosUploadResult
-        )
         if (this.portfoliosUploadResult?.length) {
-
             const idsToDelete = this.portfoliosUploadResult.map(portpolio => portpolio.id);
             await firstValueFrom(this.fileClient.send({ cmd: 'deleteMultipleFiles' }, idsToDelete));
         }
