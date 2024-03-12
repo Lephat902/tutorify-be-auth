@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetUserByIdQuery, GetUsersQuery } from './queries/impl';
 import { ApproveTutorCommand, BlockUserCommand, LoginCommand, UnblockUserCommand, VerifyEmailCommand } from './commands/impl';
-import { CreateBaseUserDto, LoginDto , UserQueryDto } from './dtos';
+import { CreateBaseUserDto, LoginDto, UpdateBaseUserDto, UserQueryDto } from './dtos';
 import { User } from '../infrastructure/schemas';
-import { CreateUserSaga } from './sagas/impl';
+import { CreateUserSaga, UpdateUserSaga } from './sagas/impl';
 
 @Injectable()
 export class UserService {
@@ -27,6 +27,10 @@ export class UserService {
 
   createUser(createUserDto: CreateBaseUserDto): Promise<User> {
     return this.commandBus.execute(new CreateUserSaga(createUserDto));
+  }
+
+  updateUser(id: string, updateUserDto: UpdateBaseUserDto): Promise<User> {
+    return this.commandBus.execute(new UpdateUserSaga(id, updateUserDto));
   }
 
   login(loginDto: LoginDto) {

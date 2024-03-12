@@ -1,14 +1,14 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UnauthorizedException } from '@nestjs/common';
 import { LoginCommand } from '../impl/login.command';
-import * as argon2 from 'argon2';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Tutor, User, UserDocument } from 'src/user/infrastructure/schemas';
 import { BroadcastService, LoginStatus, UserLoggedInEvent, UserLoggedInEventPayload, UserRole } from '@tutorify/shared';
 import { Builder } from 'builder-pattern';
+import { checkPassword } from '../../helpers';
 
-const MAX_LOGIN_FAILURE_ALLOWED = 5;
+export const MAX_LOGIN_FAILURE_ALLOWED = 5;
 
 @CommandHandler(LoginCommand)
 export class LoginHandler implements ICommandHandler<LoginCommand> {
@@ -24,12 +24,13 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
         const existingUser = await this.findUserByEmailOrUsername(email, username);
         this.checkUserStatus(existingUser);
 
-        const successfulLogin = await this.checkPassword(existingUser, password);
+        const successfulLogin = await checkPassword(existingUser, password);
 
         const loginStatus = successfulLogin ? LoginStatus.SUCCESSFUL : LoginStatus.FAILED;
         this.dispatchEvent(existingUser.id, loginStatus);
         if (!successfulLogin) {
-            throw new UnauthorizedException('Invalid credentials');
+            const loginAttemptsLeft = MAX_LOGIN_FAILURE_ALLOWED - existingUser.loginFailureCount;
+            throw new UnauthorizedException(`You have ${loginAttemptsLeft} login attempts left`);
         }
 
         return existingUser;
@@ -72,21 +73,6 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
         if (!tutor.isApproved) {
             throw new UnauthorizedException('Tutor account not approved yet');
         }
-    }
-
-    private async checkPassword(user: UserDocument, password: string) {
-        const isPasswordValid = await argon2.verify(user.password, password);
-
-        if (!isPasswordValid) {
-            user.loginFailureCount++;
-            user.save();
-            return false;
-        }
-
-        // Reset login failure count on successful login
-        user.loginFailureCount = 0;
-        user.save();
-        return true;
     }
 
     private dispatchEvent(userId: string, status: LoginStatus) {

@@ -6,9 +6,9 @@ import { CreateUserSaga } from '../impl/create-user.saga';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { User, Tutor, Student, UserDocument } from 'src/user/infrastructure/schemas';
-import { BroadcastService, QueueNames, UserCreatedEvent, UserCreatedEventPayload, UserRole } from '@tutorify/shared';
+import { BroadcastService, FileUploadResponseDto, QueueNames, UserCreatedEvent, UserCreatedEventPayload, UserRole } from '@tutorify/shared';
 import { Builder as SagaBuilder, Saga } from 'nestjs-saga';
-import { CreateTutorDto, FileUploadResponseDto } from '../../dtos';
+import { CreateTutorDto } from '../../dtos';
 import { Builder } from 'builder-pattern';
 
 @Saga(CreateUserSaga)
@@ -58,7 +58,7 @@ export class CreateUserSagaHandler {
 
         .build();
 
-    async step1(cmd: CreateUserSaga) {
+    private async step1(cmd: CreateUserSaga) {
         const { createBaseUserDto } = cmd;
         const { email, username } = createBaseUserDto;
 
@@ -75,13 +75,13 @@ export class CreateUserSagaHandler {
         }
     }
 
-    async step2(cmd: CreateUserSaga) {
+    private async step2(cmd: CreateUserSaga) {
         const { avatar } = cmd.createBaseUserDto;
         if (avatar)
             this.avatarUploadResult = await firstValueFrom(this.fileClient.send({ cmd: 'uploadSingleFile' }, { file: avatar }));
     }
 
-    async step3(cmd: CreateUserSaga) {
+    private async step3(cmd: CreateUserSaga) {
         const { createBaseUserDto } = cmd;
         const { role } = createBaseUserDto;
         if (role === UserRole.TUTOR) {
@@ -92,9 +92,9 @@ export class CreateUserSagaHandler {
         }
     }
 
-    async step4(cmd: CreateUserSaga) {
+    private async step4(cmd: CreateUserSaga) {
         const { createBaseUserDto } = cmd;
-        const { password, role, gender } = createBaseUserDto;
+        const { password, role, gender = null } = createBaseUserDto;
 
         // Hash the provided password using argon2
         const hashedPassword = await argon2.hash(password);
@@ -102,7 +102,7 @@ export class CreateUserSagaHandler {
             ...createBaseUserDto,
             password: hashedPassword,
             avatar: this.avatarUploadResult,
-	    gender: gender || null,
+            gender
         } as User;
         let newUser: UserDocument;
 
@@ -126,13 +126,13 @@ export class CreateUserSagaHandler {
         this.savedUser = await newUser.save();
     }
 
-    async step5(cmd: CreateUserSaga) {
+    private async step5(cmd: CreateUserSaga) {
         this.token = await firstValueFrom(
             this.tokenClient.send<string>({ cmd: 'insert' }, this.savedUser._id.toString())
         );
     }
 
-    async step6(cmd: CreateUserSaga) {
+    private async step6(cmd: CreateUserSaga) {
         await firstValueFrom(
             this.mailClient.send<string>({ cmd: 'sendUserConfirmation' }, {
                 user: { name: this.savedUser.firstName, email: this.savedUser.email },
@@ -141,7 +141,7 @@ export class CreateUserSagaHandler {
         );
     }
 
-    step7(cmd: CreateUserSaga) {
+    private step7(cmd: CreateUserSaga) {
         let proficienciesIds: string[];
         if (this.savedUser.role === UserRole.TUTOR) {
             const { createBaseUserDto } = cmd;
@@ -161,30 +161,30 @@ export class CreateUserSagaHandler {
         this.broadcastService.broadcastEventToAllMicroservices(event.pattern, event.payload);
     }
 
-    async step2Compensation(cmd: CreateUserSaga) {
-	if (this.avatarUploadResult) {
+    private async step2Compensation(cmd: CreateUserSaga) {
+        if (this.avatarUploadResult) {
             await firstValueFrom(this.fileClient.send({ cmd: 'deleteSingleFile' }, this.avatarUploadResult.id));
-	}
+        }
     }
 
-    async step3Compensation(cmd: CreateUserSaga) {
+    private async step3Compensation(cmd: CreateUserSaga) {
         if (this.portfoliosUploadResult?.length) {
             const idsToDelete = this.portfoliosUploadResult.map(portpolio => portpolio.id);
             await firstValueFrom(this.fileClient.send({ cmd: 'deleteMultipleFiles' }, idsToDelete));
         }
     }
 
-    async step4Compensation(cmd: CreateUserSaga) {
+    private async step4Compensation(cmd: CreateUserSaga) {
         await this.userModel.deleteOne(this.savedUser._id);
     }
 
-    async step5Compensation(cmd: CreateUserSaga) {
+    private async step5Compensation(cmd: CreateUserSaga) {
         this.token = await firstValueFrom(
             this.tokenClient.send<string>({ cmd: 'deleteAll' }, this.savedUser._id.toString())
         );
     }
 
-    buildResult(cmd: CreateUserSaga): User {
+    private buildResult(cmd: CreateUserSaga): User {
         return this.savedUser;
     }
 }
