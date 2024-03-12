@@ -13,8 +13,8 @@ export class Tutor extends User {
     @Prop({ nullable: true })
     approvedAt: Date;
 
-    @Prop({ default: '' })
-    minimumWage: string;
+    @Prop({ default: 0 })
+    minimumWage: number;
 
     @Prop({ default: '' })
     currentWorkplace: string;
