@@ -114,9 +114,12 @@ export class UpdateUserSagaHandler {
             this.existingUser.avatar = this.avatarUploadResult;
         }
 
-        // Update the user's portfolios if new ones are provided and the user is a tutor
-        if (this.existingUser.role === UserRole.TUTOR && this.portfoliosUploadResult) {
-            (this.existingUser as unknown as Tutor).tutorPortfolios = this.portfoliosUploadResult;
+        // Update the tutor's portfolios if new ones are provided
+        if (this.portfoliosUploadResult) {
+            (this.existingUser as unknown as Tutor).tutorPortfolios = [
+                ...(this.existingUser as unknown as Tutor).tutorPortfolios,
+                ...this.portfoliosUploadResult,
+            ];
         }
 
         // Save the updated user to the database

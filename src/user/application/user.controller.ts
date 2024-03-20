@@ -37,6 +37,14 @@ export class UserController {
     return this.userService.updateUser(data.id, data.updateUserDto);
   }
 
+  @MessagePattern({ cmd: 'deleteSingleTutorPortfolio' })
+  deleteSingleTutorPortfolio(data: {
+    id: string,
+    portfolioId: string,
+  }) {
+    return this.userService.deleteSingleTutorPortfolio(data.id, data.portfolioId);
+  }
+
   @MessagePattern({ cmd: 'login' })
   login(loginDto: LoginDto) {
     return this.userService.login(loginDto);
