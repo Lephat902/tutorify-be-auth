@@ -21,13 +21,13 @@ function MongooseClassSerializerInterceptor(
             response:
                 | PlainLiteralObject
                 | PlainLiteralObject[]
-                | { items: PlainLiteralObject[]; count: number },
+                | { results: PlainLiteralObject[]; totalCount: number },
         ) {
-            if (!Array.isArray(response) && response?.items) {
-                const items = this.prepareResponse(response.items);
+            if (!Array.isArray(response) && response?.results) {
+                const results = this.prepareResponse(response.results);
                 return {
-                    count: response.count,
-                    items,
+                    totalCount: response.totalCount,
+                    results,
                 };
             }
 

@@ -1,16 +1,16 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { GetUsersQuery } from '../impl/get-users.query';
+import { GetUsersAndTotalCountQuery } from '../impl/get-users-and-total-count.query';
 import { FilterQuery, Model, QueryOptions } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from 'src/user/infrastructure/schemas';
 
-@QueryHandler(GetUsersQuery)
-export class GetUsersHandler implements IQueryHandler<GetUsersQuery> {
+@QueryHandler(GetUsersAndTotalCountQuery)
+export class GetUsersAndTotalCountHandler implements IQueryHandler<GetUsersAndTotalCountQuery> {
     constructor(
         @InjectModel(User.name) private readonly userModel: Model<User>,
     ) { }
 
-    async execute(query: GetUsersQuery): Promise<User[]> {
+    async execute(query: GetUsersAndTotalCountQuery): Promise<{ totalCount: number, results: User[] }> {
         const { filters } = query;
         const { page, limit, role, q, gender, includeEmailNotVerified, includeBlocked } = filters;
 
@@ -46,6 +46,11 @@ export class GetUsersHandler implements IQueryHandler<GetUsersQuery> {
             userQuery.isBlocked = false;
         }
 
-        return this.userModel.find(userQuery, null, options).exec();
+        const [results, totalCount] = await Promise.all([
+            this.userModel.find(userQuery, null, options).exec(),
+            this.userModel.countDocuments(userQuery).exec()
+        ]);
+
+        return { totalCount, results };
     }
 }

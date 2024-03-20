@@ -14,9 +14,9 @@ export class UserController {
     return this.userService.getUserById(id);
   }
 
-  @MessagePattern({ cmd: 'getUsers' })
-  getUsers(filters: UserQueryDto): Promise<User[]> {
-    return this.userService.getUsers(filters);
+  @MessagePattern({ cmd: 'getUsersAndTotalCount' })
+  getUsersAndTotalCount(filters: UserQueryDto): Promise<{ totalCount: number, results: User[] }> {
+    return this.userService.getUsersAndTotalCount(filters);
   }
 
   @MessagePattern({ cmd: 'verifyEmail' })

@@ -1,7 +1,7 @@
 import { GetUserByIdHandler } from './get-user-by-id.handler';
-import { GetUsersHandler } from './get-users.handler';
+import { GetUsersAndTotalCountHandler } from './get-users-and-total-count.handler';
 
 export const QueryHandlers = [
     GetUserByIdHandler,
-    GetUsersHandler
+    GetUsersAndTotalCountHandler
 ]
