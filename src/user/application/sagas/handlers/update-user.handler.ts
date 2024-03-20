@@ -73,7 +73,6 @@ export class UpdateUserSagaHandler {
             if (!oldPassword) {
                 throw new BadRequestException(`You must provide old password to reset password`);
             }
-            console.log(this.existingUser.password, oldPassword);
             const oldPasswordValid = await checkPassword(this.existingUser, oldPassword);
             if (!oldPasswordValid) {
                 const loginAttemptsLeft = MAX_LOGIN_FAILURE_ALLOWED - this.existingUser.loginFailureCount;

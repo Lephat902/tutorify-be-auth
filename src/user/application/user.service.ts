@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { GetUserByIdQuery, GetUsersQuery } from './queries/impl';
+import { GetUserByIdQuery, GetUsersAndTotalCountQuery } from './queries/impl';
 import { ApproveTutorCommand, BlockUserCommand, LoginCommand, UnblockUserCommand, VerifyEmailCommand } from './commands/impl';
 import { CreateBaseUserDto, LoginDto, UpdateBaseUserDto, UserQueryDto } from './dtos';
 import { User } from '../infrastructure/schemas';
@@ -17,8 +17,8 @@ export class UserService {
     return this.queryBus.execute(new GetUserByIdQuery(userId));
   }
 
-  getUsers(filters: UserQueryDto): Promise<User[]> {
-    return this.queryBus.execute(new GetUsersQuery(filters));
+  getUsersAndTotalCount(filters: UserQueryDto): Promise<{ totalCount: number, results: User[] }> {
+    return this.queryBus.execute(new GetUsersAndTotalCountQuery(filters));
   }
 
   verifyEmail(token: string) {

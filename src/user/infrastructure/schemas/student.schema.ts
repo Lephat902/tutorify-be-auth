@@ -5,6 +5,9 @@ import { User, UserSchema } from './user.schema';
 @Schema()
 export class Student extends User {
     @Prop({ default: '' })
+    parentEmail: string;
+
+    @Prop({ default: '' })
     parentFirstName: string;
 
     @Prop({ default: '' })
