@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetUserByIdQuery, GetUsersAndTotalCountQuery } from './queries/impl';
-import { ApproveTutorCommand, BlockUserCommand, LoginCommand, UnblockUserCommand, VerifyEmailCommand } from './commands/impl';
+import { ApproveTutorCommand, BlockUserCommand, DeletePortfolioCommand, LoginCommand, UnblockUserCommand, VerifyEmailCommand } from './commands/impl';
 import { CreateBaseUserDto, LoginDto, UpdateBaseUserDto, UserQueryDto } from './dtos';
 import { User } from '../infrastructure/schemas';
 import { CreateUserSaga, UpdateUserSaga } from './sagas/impl';
@@ -31,6 +31,10 @@ export class UserService {
 
   updateUser(id: string, updateUserDto: UpdateBaseUserDto): Promise<User> {
     return this.commandBus.execute(new UpdateUserSaga(id, updateUserDto));
+  }
+
+  deleteSingleTutorPortfolio(id: string, portfolioId: string) {
+    return this.commandBus.execute(new DeletePortfolioCommand(id, portfolioId));
   }
 
   login(loginDto: LoginDto) {
