@@ -115,7 +115,7 @@ export class UpdateUserSagaHandler {
         }
 
         // Update the tutor's portfolios if new ones are provided
-        if (this.portfoliosUploadResult) {
+        if (this.portfoliosUploadResult.length) {
             (this.existingUser as unknown as Tutor).tutorPortfolios = [
                 ...(this.existingUser as unknown as Tutor).tutorPortfolios,
                 ...this.portfoliosUploadResult,
@@ -142,10 +142,10 @@ export class UpdateUserSagaHandler {
 
         if (userRole === UserRole.TUTOR) {
             const createTutorDto = updateBaseUserDto as UpdateTutorDto;
-            eventPayload.proficienciesIds.concat(createTutorDto.proficienciesIds);
+            eventPayload.proficienciesIds.push(...createTutorDto.proficienciesIds);
         } else if (userRole === UserRole.STUDENT) {
             const createStudentDto = updateBaseUserDto as UpdateStudentDto;
-            eventPayload.interestedClassCategoryIds.concat(createStudentDto.interestedClassCategoryIds);
+            eventPayload.interestedClassCategoryIds.push(...createStudentDto.interestedClassCategoryIds);
         }
 
         const event = new UserUpdatedEvent(eventPayload);
