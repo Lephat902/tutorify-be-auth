@@ -5,4 +5,5 @@ export class CreateStudentDto extends CreateBaseUserDto {
     readonly parentFirstName: string;
     readonly parentMiddleName: string;
     readonly parentLastName: string;
+    readonly interestedClassCategoryIds: string[];
 }

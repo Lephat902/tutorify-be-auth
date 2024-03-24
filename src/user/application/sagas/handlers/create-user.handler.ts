@@ -8,7 +8,7 @@ import { firstValueFrom } from 'rxjs';
 import { User, Tutor, Student, UserDocument } from 'src/user/infrastructure/schemas';
 import { BroadcastService, FileUploadResponseDto, QueueNames, UserCreatedEvent, UserCreatedEventPayload, UserRole } from '@tutorify/shared';
 import { Builder as SagaBuilder, Saga } from 'nestjs-saga';
-import { CreateTutorDto } from '../../dtos';
+import { CreateStudentDto, CreateTutorDto } from '../../dtos';
 import { Builder } from 'builder-pattern';
 
 @Saga(CreateUserSaga)
@@ -142,21 +142,27 @@ export class CreateUserSagaHandler {
     }
 
     private step7(cmd: CreateUserSaga) {
-        let proficienciesIds: string[];
-        if (this.savedUser.role === UserRole.TUTOR) {
-            const { createBaseUserDto } = cmd;
-            const createTutorDto = createBaseUserDto as CreateTutorDto;
-            proficienciesIds = createTutorDto.proficienciesIds;
-        }
+        const { createBaseUserDto } = cmd;
+        const userRole = this.savedUser.role;
         const eventPayload = Builder<UserCreatedEventPayload>()
             .userId(this.savedUser._id.toString())
             .email(this.savedUser.email)
             .username(this.savedUser.username)
             .firstName(this.savedUser.firstName)
             .lastName(this.savedUser.lastName)
-            .role(this.savedUser.role)
-            .proficienciesIds(proficienciesIds)
+            .role(userRole)
+            .proficienciesIds([])
+            .interestedClassCategoryIds([])
             .build();
+
+        if (userRole === UserRole.TUTOR) {
+            const createTutorDto = createBaseUserDto as CreateTutorDto;
+            eventPayload.proficienciesIds.concat(createTutorDto.proficienciesIds);
+        } else if (userRole === UserRole.STUDENT) {
+            const createStudentDto = createBaseUserDto as CreateStudentDto;
+            eventPayload.interestedClassCategoryIds.concat(createStudentDto.interestedClassCategoryIds);
+        }
+
         const event = new UserCreatedEvent(eventPayload);
         this.broadcastService.broadcastEventToAllMicroservices(event.pattern, event.payload);
     }

@@ -8,7 +8,7 @@ import { firstValueFrom } from 'rxjs';
 import { User, Tutor, UserDocument } from 'src/user/infrastructure/schemas';
 import { BroadcastService, FileUploadResponseDto, QueueNames, UserRole, UserUpdatedEvent, UserUpdatedEventPayload } from '@tutorify/shared';
 import { Builder as SagaBuilder, Saga } from 'nestjs-saga';
-import { UpdateTutorDto } from '../../dtos';
+import { UpdateStudentDto, UpdateTutorDto } from '../../dtos';
 import { Builder } from 'builder-pattern';
 import { checkPassword } from '../../helpers';
 import { MAX_LOGIN_FAILURE_ALLOWED } from '../../commands/handlers/login.handler';
@@ -127,21 +127,27 @@ export class UpdateUserSagaHandler {
     }
 
     private step5(cmd: UpdateUserSaga) {
-        let proficienciesIds: string[];
-        if (this.savedUser.role === UserRole.TUTOR) {
-            const { updateBaseUserDto } = cmd;
-            const updateTutorDto = updateBaseUserDto as UpdateTutorDto;
-            proficienciesIds = updateTutorDto.proficienciesIds;
-        }
+        const { updateBaseUserDto } = cmd;
+        const userRole = this.savedUser.role;
         const eventPayload = Builder<UserUpdatedEventPayload>()
             .userId(this.savedUser._id.toString())
             .email(this.savedUser.email)
             .username(this.savedUser.username)
             .firstName(this.savedUser.firstName)
             .lastName(this.savedUser.lastName)
-            .role(this.savedUser.role)
-            .proficienciesIds(proficienciesIds)
+            .role(userRole)
+            .proficienciesIds([])
+            .interestedClassCategoryIds([])
             .build();
+
+        if (userRole === UserRole.TUTOR) {
+            const createTutorDto = updateBaseUserDto as UpdateTutorDto;
+            eventPayload.proficienciesIds.concat(createTutorDto.proficienciesIds);
+        } else if (userRole === UserRole.STUDENT) {
+            const createStudentDto = updateBaseUserDto as UpdateStudentDto;
+            eventPayload.interestedClassCategoryIds.concat(createStudentDto.interestedClassCategoryIds);
+        }
+
         const event = new UserUpdatedEvent(eventPayload);
         this.broadcastService.broadcastEventToAllMicroservices(event.pattern, event.payload);
     }
