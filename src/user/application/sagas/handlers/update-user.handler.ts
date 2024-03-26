@@ -141,11 +141,13 @@ export class UpdateUserSagaHandler {
             .build();
 
         if (userRole === UserRole.TUTOR) {
-            const createTutorDto = updateBaseUserDto as UpdateTutorDto;
-            eventPayload.proficienciesIds.push(...createTutorDto.proficienciesIds);
+            const updateTutorDto = updateBaseUserDto as UpdateTutorDto;
+            if (updateTutorDto?.proficienciesIds?.length)
+                eventPayload.proficienciesIds.push(...updateTutorDto.proficienciesIds);
         } else if (userRole === UserRole.STUDENT) {
-            const createStudentDto = updateBaseUserDto as UpdateStudentDto;
-            eventPayload.interestedClassCategoryIds.push(...createStudentDto.interestedClassCategoryIds);
+            const updateStudentDto = updateBaseUserDto as UpdateStudentDto;
+            if (updateStudentDto?.interestedClassCategoryIds?.length)
+                eventPayload.interestedClassCategoryIds.push(...updateStudentDto.interestedClassCategoryIds);
         }
 
         const event = new UserUpdatedEvent(eventPayload);

@@ -24,6 +24,7 @@ export class ApproveTutorHandler implements ICommandHandler<ApproveTutorCommand>
                 throw new BadRequestException("Tutor's email not verified yet");
             }
             tutor.isApproved = true;
+	    tutor.approvedAt = new Date();
             await tutor.save();
         }
 
