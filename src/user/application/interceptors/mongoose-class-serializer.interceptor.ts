@@ -1,50 +1,67 @@
 import {
-    ClassSerializerInterceptor,
-    PlainLiteralObject,
-    Type,
+  ClassSerializerInterceptor,
+  PlainLiteralObject,
+  Type,
 } from '@nestjs/common';
 import { ClassTransformOptions, plainToClass } from 'class-transformer';
 import { Document } from 'mongoose';
+import { Tutor, User } from '../../infrastructure/schemas';
+import { UserRole } from '../../../../../shared/src';
 
 function MongooseClassSerializerInterceptor(
-    classToIntercept: Type,
+  classToIntercept: Type,
 ): typeof ClassSerializerInterceptor {
-    return class Interceptor extends ClassSerializerInterceptor {
-        private changePlainObjectToClass(document: PlainLiteralObject) {
-            if (!(document instanceof Document)) {
-                return document;
-            }
-            return plainToClass(classToIntercept, document.toJSON());
+  return class Interceptor extends ClassSerializerInterceptor {
+    private changePlainObjectToClass(document: PlainLiteralObject) {
+      if (!(document instanceof Document)) {
+        return document;
+      }
+
+      const object = plainToClass(classToIntercept, document.toJSON());
+
+      let classType = object?.role || classToIntercept;
+
+      if (classType) {
+        switch (classType) {
+          case UserRole.TUTOR:
+            classType = Tutor;
+            break;
         }
+      }
 
-        private prepareResponse(
-            response:
-                | PlainLiteralObject
-                | PlainLiteralObject[]
-                | { results: PlainLiteralObject[]; totalCount: number },
-        ) {
-            if (!Array.isArray(response) && response?.results) {
-                const results = this.prepareResponse(response.results);
-                return {
-                    totalCount: response.totalCount,
-                    results,
-                };
-            }
+      return plainToClass(classType, document.toJSON());
+    }
 
-            if (Array.isArray(response)) {
-                return response.map(this.changePlainObjectToClass);
-            }
+    private prepareResponse(
+      response:
+        | PlainLiteralObject
+        | PlainLiteralObject[]
+        | { results: PlainLiteralObject[]; totalCount: number },
+    ) {
+      if (!Array.isArray(response) && response?.results) {
+        const results = this.prepareResponse(response.results);
+        return {
+          totalCount: response.totalCount,
+          results,
+        };
+      }
 
-            return this.changePlainObjectToClass(response);
-        }
+      if (Array.isArray(response)) {
+        return response.map((document) =>
+          this.changePlainObjectToClass(document),
+        );
+      }
 
-        serialize(
-            response: PlainLiteralObject | PlainLiteralObject[],
-            options: ClassTransformOptions,
-        ) {
-            return super.serialize(this.prepareResponse(response), options);
-        }
-    };
+      return this.changePlainObjectToClass(response);
+    }
+
+    serialize(
+      response: PlainLiteralObject | PlainLiteralObject[],
+      options: ClassTransformOptions,
+    ) {
+      return super.serialize(this.prepareResponse(response), options);
+    }
+  };
 }
 
 export default MongooseClassSerializerInterceptor;

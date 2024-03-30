@@ -9,5 +9,5 @@ export class CreateTutorDto extends CreateBaseUserDto {
     readonly graduationYear: number;
     readonly proficienciesIds: string[];
     readonly portfolios?: Array<Express.Multer.File>;
-    readonly socialProfiles: string[];
+    readonly socialProfiles?: SocialProfile[];
 }
