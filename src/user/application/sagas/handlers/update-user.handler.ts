@@ -81,25 +81,25 @@ export class UpdateUserSagaHandler {
       }
     }
 
-    // if (password) {
-    //   if (!oldPassword) {
-    //     throw new BadRequestException(
-    //       `You must provide old password to reset password`,
-    //     );
-    //   }
-    //   const oldPasswordValid = await checkPassword(
-    //     this.existingUser,
-    //     oldPassword,
-    //   );
-    //   if (!oldPasswordValid) {
-    //     const loginAttemptsLeft =
-    //       MAX_LOGIN_FAILURE_ALLOWED - this.existingUser.loginFailureCount;
+    if (password) {
+      if (!oldPassword) {
+        throw new BadRequestException(
+          `You must provide old password to reset password`,
+        );
+      }
+      const oldPasswordValid = await checkPassword(
+        this.existingUser,
+        oldPassword,
+      );
+      if (!oldPasswordValid) {
+        const loginAttemptsLeft =
+          MAX_LOGIN_FAILURE_ALLOWED - this.existingUser.loginFailureCount;
 
-    //     throw new UnauthorizedException(
-    //       `You have ${loginAttemptsLeft} login attempts left`,
-    //     );
-    //   }
-    // }
+        throw new UnauthorizedException(
+          `You have ${loginAttemptsLeft} login attempts left`,
+        );
+      }
+    }
   }
 
   private async step2(cmd: UpdateUserSaga) {
