@@ -1,6 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { User, UserSchema } from './user.schema';
 import { FileSchema } from './file.schema';
+import { SocialProfile } from './social-profile.schema';
+import { Type } from 'class-transformer';
 
 @Schema()
 export class Tutor extends User {
@@ -31,8 +33,9 @@ export class Tutor extends User {
     @Prop([FileSchema])
     tutorPortfolios: FileSchema[];
 
-    @Prop([String])
-    socialProfiles: string[];
+    @Prop({type: [SocialProfile]})
+    @Type(() => SocialProfile)
+    socialProfiles: SocialProfile[];
 }
 
 // Create a discriminator
