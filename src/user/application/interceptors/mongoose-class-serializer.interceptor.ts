@@ -5,31 +5,32 @@ import {
 } from '@nestjs/common';
 import { ClassTransformOptions, plainToClass } from 'class-transformer';
 import { Document } from 'mongoose';
-import { Tutor, User } from '../../infrastructure/schemas';
-import { UserRole } from '../../../../../shared/src';
+import { Student, Tutor, User } from '../../infrastructure/schemas';
+import { UserRole } from '@tutorify/shared';
 
-function MongooseClassSerializerInterceptor(
-  classToIntercept: Type,
-): typeof ClassSerializerInterceptor {
+export function MongooseClassSerializerInterceptor(): typeof ClassSerializerInterceptor {
   return class Interceptor extends ClassSerializerInterceptor {
     private changePlainObjectToClass(document: PlainLiteralObject) {
       if (!(document instanceof Document)) {
         return document;
       }
 
-      const object = plainToClass(classToIntercept, document.toJSON());
+      let classToIntercept: Type<User>;
 
-      let classType = object?.role || classToIntercept;
-
-      if (classType) {
-        switch (classType) {
-          case UserRole.TUTOR:
-            classType = Tutor;
-            break;
-        }
+      switch ((document as unknown as User)?.role) {
+        case UserRole.TUTOR:
+          classToIntercept = Tutor;
+          break;
+        case UserRole.STUDENT:
+          classToIntercept = Student;
+          break;
+        case UserRole.ADMIN:
+        case UserRole.MANAGER:
+        default:
+          classToIntercept = User;
       }
 
-      return plainToClass(classType, document.toJSON());
+      return plainToClass(classToIntercept, document.toJSON());
     }
 
     private prepareResponse(
@@ -63,5 +64,3 @@ function MongooseClassSerializerInterceptor(
     }
   };
 }
-
-export default MongooseClassSerializerInterceptor;

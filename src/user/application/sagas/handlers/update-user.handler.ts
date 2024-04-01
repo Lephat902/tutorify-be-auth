@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Inject,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -8,53 +7,44 @@ import * as argon2 from 'argon2';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UpdateUserSaga } from '../impl';
-import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
-import { User, Tutor, UserDocument } from 'src/user/infrastructure/schemas';
+import { Tutor, User, UserDocument } from 'src/user/infrastructure/schemas';
 import {
   BroadcastService,
-  FileUploadResponseDto,
-  QueueNames,
   UserRole,
   UserUpdatedEvent,
   UserUpdatedEventPayload,
 } from '@tutorify/shared';
 import { Builder as SagaBuilder, Saga } from 'nestjs-saga';
-import { UpdateStudentDto, UpdateTutorDto } from '../../dtos';
+import { UpdateBaseUserDto, UpdateStudentDto, UpdateTutorDto } from '../../dtos';
 import { Builder } from 'builder-pattern';
 import { checkPassword } from '../../helpers';
 import { MAX_LOGIN_FAILURE_ALLOWED } from '../../commands/handlers/login.handler';
+import { FileProxy } from '../../proxies';
 
 @Saga(UpdateUserSaga)
 export class UpdateUserSagaHandler {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
     private readonly broadcastService: BroadcastService,
-    @Inject(QueueNames.FILE) private readonly fileClient: ClientProxy,
-  ) {}
+    private readonly fileProxy: FileProxy,
+  ) { }
   private existingUser: UserDocument;
-  private avatarUploadResult: FileUploadResponseDto = null;
-  private portfoliosUploadResult: FileUploadResponseDto[] = [];
   private savedUser: User;
+  private filesIdsToDelete: string[] = [];
 
   saga = new SagaBuilder<UpdateUserSaga, User>()
 
     .step('Validate user data')
     .invoke(this.step1)
 
-    .step('Upload avatar')
-    .invoke(this.step2)
-    .withCompensation(this.step2Compensation)
-
-    .step('Upload portfolios if signing up tutor')
-    .invoke(this.step3)
-    .withCompensation(this.step3Compensation)
-
     .step('Update user')
-    .invoke(this.step4)
+    .invoke(this.step2)
 
     .step('Dispatch user-updated event')
-    .invoke(this.step5)
+    .invoke(this.step3)
+
+    .step('Clean dangling files (async)')
+    .invoke(this.step4)
 
     .return(this.buildResult)
 
@@ -103,58 +93,23 @@ export class UpdateUserSagaHandler {
   }
 
   private async step2(cmd: UpdateUserSaga) {
-    const { avatar } = cmd.updateBaseUserDto;
-    if (avatar)
-      this.avatarUploadResult = await firstValueFrom(
-        this.fileClient.send({ cmd: 'uploadSingleFile' }, { file: avatar }),
-      );
-  }
-
-  private async step3(cmd: UpdateUserSaga) {
     const { updateBaseUserDto } = cmd;
-    if (this.existingUser.role === UserRole.TUTOR) {
-      const updateTutorDto = updateBaseUserDto as UpdateTutorDto;
-      const { portfolios } = updateTutorDto;
-      if (portfolios)
-        this.portfoliosUploadResult = await firstValueFrom(
-          this.fileClient.send(
-            { cmd: 'uploadMultipleFiles' },
-            { files: portfolios },
-          ),
-        );
-    }
-  }
 
-  private async step4(cmd: UpdateUserSaga) {
-    const fullUpdateBaseUserDto = cmd.updateBaseUserDto;
-    const { password, avatar, ...updateBaseUserDto } = fullUpdateBaseUserDto;
+    this.filesIdsToDelete = this.getFilesToCleanUp(this.existingUser, updateBaseUserDto);
 
     // Update the existingUser fields
     Object.assign(this.existingUser, updateBaseUserDto);
 
-    if (password) {
-      // Hash the provided password using argon2
-      const hashedPassword = await argon2.hash(password);
+    if (updateBaseUserDto.password !== undefined) {
+      const hashedPassword = await argon2.hash(updateBaseUserDto.password);
       this.existingUser.password = hashedPassword;
-    }
-
-    if (avatar) {
-      this.existingUser.avatar = this.avatarUploadResult;
-    }
-
-    // Update the tutor's portfolios if new ones are provided
-    if (this.portfoliosUploadResult.length) {
-      (this.existingUser as unknown as Tutor).tutorPortfolios = [
-        ...(this.existingUser as unknown as Tutor).tutorPortfolios,
-        ...this.portfoliosUploadResult,
-      ];
     }
 
     // Save the updated user to the database
     this.savedUser = await this.existingUser.save();
   }
 
-  private step5(cmd: UpdateUserSaga) {
+  private step3(cmd: UpdateUserSaga) {
     const { updateBaseUserDto } = cmd;
     const userRole = this.savedUser.role;
     const eventPayload = Builder<UserUpdatedEventPayload>()
@@ -187,29 +142,33 @@ export class UpdateUserSagaHandler {
     );
   }
 
-  private async step2Compensation(cmd: UpdateUserSaga) {
-    if (this.avatarUploadResult) {
-      await firstValueFrom(
-        this.fileClient.send(
-          { cmd: 'deleteSingleFile' },
-          this.avatarUploadResult.id,
-        ),
-      );
-    }
-  }
-
-  private async step3Compensation(cmd: UpdateUserSaga) {
-    if (this.portfoliosUploadResult?.length) {
-      const idsToDelete = this.portfoliosUploadResult.map(
-        (portpolio) => portpolio.id,
-      );
-      await firstValueFrom(
-        this.fileClient.send({ cmd: 'deleteMultipleFiles' }, idsToDelete),
-      );
-    }
+  private step4(cmd: UpdateUserSaga) {
+    // do it asynchronously with no await
+    this.fileProxy.deleteMultipleFiles(this.filesIdsToDelete);
   }
 
   private buildResult(cmd: UpdateUserSaga): User {
     return this.savedUser;
+  }
+
+  private getFilesToCleanUp(currentUserState: User, updateBaseUserDto: UpdateBaseUserDto) {
+    const filesToCleanUp = [];
+    // If new avatar is set and old avatar exist
+    if (updateBaseUserDto?.avatar && currentUserState?.avatar) {
+      filesToCleanUp.push(currentUserState.avatar.id);
+    }
+    if (this.existingUser.role === UserRole.TUTOR) {
+      // Get the one that presents in current one but not in new one
+      const portfoliosIdsToCleanUp = (currentUserState as Tutor).tutorPortfolios
+        .filter(currentPortfolio =>
+          !(updateBaseUserDto as UpdateTutorDto).portfolios.some(updatedPortfolio =>
+            currentPortfolio.id === updatedPortfolio.id
+          )
+        )
+        .map(portfolio => portfolio.id);
+      filesToCleanUp.push(...portfoliosIdsToCleanUp);
+    }
+
+    return filesToCleanUp;
   }
 }

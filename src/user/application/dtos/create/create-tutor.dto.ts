@@ -1,3 +1,4 @@
+import { FileUploadResponseDto } from "@tutorify/shared";
 import { CreateBaseUserDto } from "./create-base-user.dto";
 
 export class CreateTutorDto extends CreateBaseUserDto {
@@ -8,6 +9,6 @@ export class CreateTutorDto extends CreateBaseUserDto {
     readonly major: string;
     readonly graduationYear: number;
     readonly proficienciesIds: string[];
-    readonly portfolios?: Array<Express.Multer.File>;
+    readonly portfolios: FileUploadResponseDto[];
     readonly socialProfiles?: SocialProfile[];
 }

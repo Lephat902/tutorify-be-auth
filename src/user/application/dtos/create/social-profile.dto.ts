@@ -1,4 +1,4 @@
-class SocialProfile {
+interface SocialProfile {
     name: string;
     url: string;
 }

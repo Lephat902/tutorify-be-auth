@@ -1,4 +1,4 @@
-import { Gender, UserRole } from "@tutorify/shared";
+import { FileUploadResponseDto, Gender, UserRole } from "@tutorify/shared";
 
 export class CreateBaseUserDto {
     readonly email: string;
@@ -12,5 +12,5 @@ export class CreateBaseUserDto {
     readonly middleName: string;
     readonly lastName: string;
     readonly role: UserRole;
-    readonly avatar?: Express.Multer.File;
+    readonly avatar: FileUploadResponseDto;
 }

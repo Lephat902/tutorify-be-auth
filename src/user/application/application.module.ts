@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { BroadcastModule, QueueNames } from '@tutorify/shared';
 import { SagaModule } from 'nestjs-saga';
 import { SagaHandlers } from './sagas/handlers';
+import { Proxies } from './proxies';
 
 @Module({
   imports: [
@@ -66,7 +67,7 @@ import { SagaHandlers } from './sagas/handlers';
     ]),
   ],
   controllers: [UserController],
-  providers: [...CommandHandlers, ...QueryHandlers, UserService],
-  exports: [ClientsModule, BroadcastModule],
+  providers: [...CommandHandlers, ...QueryHandlers, UserService, ...Proxies],
+  exports: [ClientsModule, BroadcastModule, ...Proxies],
 })
 export class ApplicationModule { }
