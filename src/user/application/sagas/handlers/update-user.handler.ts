@@ -95,7 +95,7 @@ export class UpdateUserSagaHandler {
   private async step2(cmd: UpdateUserSaga) {
     const { updateBaseUserDto } = cmd;
 
-    this.filesIdsToDelete = this.getFilesToCleanUp(this.existingUser, updateBaseUserDto);
+    this.filesIdsToDelete = UpdateUserSagaHandler.getFilesToCleanUp(this.existingUser, updateBaseUserDto);
 
     // Update the existingUser fields
     Object.assign(this.existingUser, updateBaseUserDto);
@@ -151,13 +151,17 @@ export class UpdateUserSagaHandler {
     return this.savedUser;
   }
 
-  private getFilesToCleanUp(currentUserState: User, updateBaseUserDto: UpdateBaseUserDto) {
+  private static getFilesToCleanUp(currentUserState: User, updateBaseUserDto: UpdateBaseUserDto) {
     const filesToCleanUp = [];
     // If new avatar is set and old avatar exist
     if (updateBaseUserDto?.avatar && currentUserState?.avatar) {
       filesToCleanUp.push(currentUserState.avatar.id);
     }
-    if (this.existingUser.role === UserRole.TUTOR) {
+    // If old value is not empty array and new value is defined
+    if (
+      (currentUserState as Tutor)?.tutorPortfolios?.length
+      && (updateBaseUserDto as UpdateTutorDto)?.portfolios
+    ) {
       // Get the one that presents in current one but not in new one
       const portfoliosIdsToCleanUp = (currentUserState as Tutor).tutorPortfolios
         .filter(currentPortfolio =>

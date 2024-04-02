@@ -30,10 +30,10 @@ export class Tutor extends User {
     @Prop({ nullable: true })
     graduationYear: number;
 
-    @Prop([FileSchema])
+    @Prop({ type: [FileSchema], default: [] })
     tutorPortfolios: FileSchema[];
 
-    @Prop({type: [SocialProfile]})
+    @Prop({ type: [SocialProfile], default: [] })
     @Type(() => SocialProfile)
     socialProfiles: SocialProfile[];
 }
