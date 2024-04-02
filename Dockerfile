@@ -24,9 +24,6 @@ RUN npm ci
 # Bundle app source
 COPY --chown=node:node . .
 
-# Use the node user from the image (instead of the root user)
-# USER node
-
 # Default cmd to run dev (can be overwritten by external cmd)
 CMD [ "npm", "run", "start:dev" ]
 
@@ -40,9 +37,6 @@ WORKDIR /usr/src/app
 
 COPY --chown=node:node package*.json ./
 
-# In order to run `npm run build` we need access to the Nest CLI which is a dev dependency. In the previous development stage we ran `npm ci` which installed all dependencies, so we can copy over the node_modules directory from the development image
-COPY --chown=node:node --from=development /usr/src/app/node_modules ./node_modules
-
 # Copy temp 'shared' dir
 COPY --chown=node:node ./shared /usr/src/shared
 
@@ -55,7 +49,7 @@ USER root
 WORKDIR /usr/src/shared
 
 # Install packages
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --only=production
 
 # Switch back to app dir
 WORKDIR /usr/src/app
@@ -65,8 +59,9 @@ RUN npm run build
 
 # Set NODE_ENV environment variable
 ENV NODE_ENV production
+
 # Running `npm ci` removes the existing node_modules directory and passing in --only=production ensures that only the production dependencies are installed. This ensures that the node_modules directory is AS optimized AS possible
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --only=production
 
 USER node
 
