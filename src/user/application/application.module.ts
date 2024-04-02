@@ -64,6 +64,20 @@ import { Proxies } from './proxies';
           },
         }),
       },
+      {
+        name: QueueNames.ADDRESS,
+        inject: [ConfigService], // Inject ConfigService
+        useFactory: async (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('RABBITMQ_URI')],
+            queue: QueueNames.ADDRESS,
+            queueOptions: {
+              durable: false,
+            },
+          },
+        }),
+      },
     ]),
   ],
   controllers: [UserController],

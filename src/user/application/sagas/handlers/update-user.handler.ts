@@ -17,9 +17,9 @@ import {
 import { Builder as SagaBuilder, Saga } from 'nestjs-saga';
 import { UpdateBaseUserDto, UpdateStudentDto, UpdateTutorDto } from '../../dtos';
 import { Builder } from 'builder-pattern';
-import { checkPassword } from '../../helpers';
+import { checkPassword, getMongoDBGeocode } from '../../helpers';
 import { MAX_LOGIN_FAILURE_ALLOWED } from '../../commands/handlers/login.handler';
-import { FileProxy } from '../../proxies';
+import { AddressProxy, FileProxy } from '../../proxies';
 
 @Saga(UpdateUserSaga)
 export class UpdateUserSagaHandler {
@@ -27,6 +27,7 @@ export class UpdateUserSagaHandler {
     @InjectModel(User.name) private readonly userModel: Model<User>,
     private readonly broadcastService: BroadcastService,
     private readonly fileProxy: FileProxy,
+    private readonly addressProxy: AddressProxy,
   ) { }
   private existingUser: UserDocument;
   private savedUser: User;
@@ -94,8 +95,15 @@ export class UpdateUserSagaHandler {
 
   private async step2(cmd: UpdateUserSaga) {
     const { updateBaseUserDto } = cmd;
+    const {address, wardId} = updateBaseUserDto;
 
+    // Specify files to delete before updating
     this.filesIdsToDelete = UpdateUserSagaHandler.getFilesToCleanUp(this.existingUser, updateBaseUserDto);
+
+    // There is changes in address
+    if (address !== undefined || wardId !== undefined) {
+      this.existingUser.location = await getMongoDBGeocode(this.addressProxy, address, wardId);
+    }
 
     // Update the existingUser fields
     Object.assign(this.existingUser, updateBaseUserDto);

@@ -8,7 +8,8 @@ import { BroadcastService, UserCreatedEvent, UserCreatedEventPayload, UserRole }
 import { Builder as SagaBuilder, Saga } from 'nestjs-saga';
 import { CreateStudentDto, CreateTutorDto } from '../../dtos';
 import { Builder } from 'builder-pattern';
-import { MailerProxy, VerificationTokenProxy } from '../../proxies';
+import { AddressProxy, MailerProxy, VerificationTokenProxy } from '../../proxies';
+import { getMongoDBGeocode } from '../../helpers';
 
 @Saga(CreateUserSaga)
 export class CreateUserSagaHandler {
@@ -19,6 +20,7 @@ export class CreateUserSagaHandler {
         private readonly broadcastService: BroadcastService,
         private readonly mailerProxy: MailerProxy,
         private readonly verificationTokenProxy: VerificationTokenProxy,
+        private readonly addressProxy: AddressProxy,
     ) { }
     private savedUser: User;
     private token: string;
@@ -65,14 +67,17 @@ export class CreateUserSagaHandler {
 
     private async step2(cmd: CreateUserSaga) {
         const { createBaseUserDto } = cmd;
-        const { password, role, gender = null } = createBaseUserDto;
+        const { password, role, gender = null, address, wardId } = createBaseUserDto;
 
         // Hash the provided password using argon2
         const hashedPassword = await argon2.hash(password);
+        const location = await getMongoDBGeocode(this.addressProxy, address, wardId);
+
         const userToSave = {
             ...createBaseUserDto,
             password: hashedPassword,
-            gender
+            gender,
+            location,
         } as User;
         let newUser: UserDocument;
 
