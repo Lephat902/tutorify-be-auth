@@ -130,6 +130,7 @@ export class UpdateUserSagaHandler {
       .firstName(this.savedUser.firstName)
       .lastName(this.savedUser.lastName)
       .role(userRole)
+      .location(this.savedUser.location)
       .proficienciesIds([])
       .interestedClassCategoryIds([])
       .build();
