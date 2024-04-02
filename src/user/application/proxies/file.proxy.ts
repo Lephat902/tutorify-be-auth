@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { ClientProxy } from "@nestjs/microservices";
 import { QueueNames } from "@tutorify/shared";
-import { firstValueFrom } from "rxjs";
+import { catchError, firstValueFrom } from "rxjs";
 
 @Injectable()
 export class FileProxy {
@@ -10,6 +10,12 @@ export class FileProxy {
     ) { }
 
     deleteMultipleFiles(fileIds: string[]) {
-        return firstValueFrom(this.client.send({ cmd: 'deleteMultipleFiles' }, fileIds));
+        return firstValueFrom(this.client.send({ cmd: 'deleteMultipleFiles' }, fileIds)
+            .pipe(
+                catchError(error => {
+                    console.error('Error occurred:', error);
+                    return null;
+                })
+            ));
     }
 }
