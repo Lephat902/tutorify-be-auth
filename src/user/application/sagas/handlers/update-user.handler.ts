@@ -65,10 +65,13 @@ export class UpdateUserSagaHandler {
       if (!username) {
         throw new BadRequestException('Username cannot be empty');
       }
-      // Check if username already exists
-      const existingUsernameUser = await this.userModel.findOne({ username });
-      if (existingUsernameUser) {
-        throw new BadRequestException('Username already exists');
+      // Not re-submit the same value
+      if (username !== this.existingUser.username) {
+        // Check if username already exists
+        const existingUsernameUser = await this.userModel.findOne({ username });
+        if (existingUsernameUser) {
+          throw new BadRequestException('Username already exists');
+        }
       }
     }
 
@@ -95,7 +98,7 @@ export class UpdateUserSagaHandler {
 
   private async step2(cmd: UpdateUserSaga) {
     const { updateBaseUserDto } = cmd;
-    const {address, wardId} = updateBaseUserDto;
+    const { address, wardId } = updateBaseUserDto;
 
     // Specify files to delete before updating
     this.filesIdsToDelete = UpdateUserSagaHandler.getFilesToCleanUp(this.existingUser, updateBaseUserDto);
