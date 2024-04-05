@@ -29,14 +29,18 @@ export class ApproveTutorHandler implements ICommandHandler<ApproveTutorCommand>
         tutor.approvedAt = new Date();
         await tutor.save();
 
-        this.dispatchEvent(tutorId);
+        this.dispatchEvent(tutor);
 
         return true;
     }
 
-    private dispatchEvent(tutorId: string) {
+    private dispatchEvent(tutor: Tutor) {
         const eventPayload = Builder<TutorApprovedEventPayload>()
-            .tutorId(tutorId)
+            .tutorId(tutor._id.toString())
+            .email(tutor.email)
+            .firstName(tutor.firstName)
+            .middleName(tutor.middleName)
+            .lastName(tutor.lastName)
             .build();
         const event = new TutorApprovedEvent(eventPayload);
         this.broadcastService.broadcastEventToAllMicroservices(event.pattern, event.payload);
