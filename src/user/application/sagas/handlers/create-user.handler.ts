@@ -4,11 +4,18 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserSaga } from '../impl/create-user.saga';
 import { User, Tutor, Student, UserDocument } from 'src/user/infrastructure/schemas';
-import { BroadcastService, UserCreatedEvent, UserCreatedEventPayload, UserRole } from '@tutorify/shared';
+import {
+    BroadcastService,
+    UserCreatedEvent,
+    UserCreatedEventPayload,
+    UserRole,
+    AddressProxy,
+    MailerProxy,
+    VerificationTokenProxy,
+} from '@tutorify/shared';
 import { Builder as SagaBuilder, Saga } from 'nestjs-saga';
 import { CreateStudentDto, CreateTutorDto } from '../../dtos';
 import { Builder } from 'builder-pattern';
-import { AddressProxy, MailerProxy, VerificationTokenProxy } from '../../proxies';
 import { getMongoDBGeocode } from '../../helpers';
 
 @Saga(CreateUserSaga)

@@ -9,7 +9,9 @@ import { Model } from 'mongoose';
 import { UpdateUserSaga } from '../impl';
 import { Tutor, User, UserDocument } from 'src/user/infrastructure/schemas';
 import {
+  AddressProxy,
   BroadcastService,
+  FileProxy,
   UserRole,
   UserUpdatedEvent,
   UserUpdatedEventPayload,
@@ -19,7 +21,6 @@ import { UpdateBaseUserDto, UpdateStudentDto, UpdateTutorDto } from '../../dtos'
 import { Builder } from 'builder-pattern';
 import { checkPassword, getMongoDBGeocode } from '../../helpers';
 import { MAX_LOGIN_FAILURE_ALLOWED } from '../../commands/handlers/login.handler';
-import { AddressProxy, FileProxy } from '../../proxies';
 
 @Saga(UpdateUserSaga)
 export class UpdateUserSagaHandler {

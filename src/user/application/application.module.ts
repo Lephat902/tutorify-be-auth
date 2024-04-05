@@ -6,10 +6,16 @@ import { UserService } from './user.service';
 import { InfrastructureModule } from '../infrastructure/infrastructure.module';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { BroadcastModule, QueueNames } from '@tutorify/shared';
+import {
+  AddressProxy,
+  BroadcastModule,
+  FileProxy,
+  MailerProxy,
+  QueueNames,
+  VerificationTokenProxy
+} from '@tutorify/shared';
 import { SagaModule } from 'nestjs-saga';
 import { SagaHandlers } from './sagas/handlers';
-import { Proxies } from './proxies';
 import { Controllers } from './controllers';
 
 @Module({
@@ -81,7 +87,22 @@ import { Controllers } from './controllers';
     ]),
   ],
   controllers: Controllers,
-  providers: [...CommandHandlers, ...QueryHandlers, UserService, ...Proxies],
-  exports: [ClientsModule, BroadcastModule, ...Proxies],
+  providers: [
+    ...CommandHandlers,
+    ...QueryHandlers,
+    UserService,
+    AddressProxy,
+    FileProxy,
+    MailerProxy,
+    VerificationTokenProxy,
+  ],
+  exports: [
+    ClientsModule,
+    BroadcastModule,
+    AddressProxy,
+    FileProxy,
+    MailerProxy,
+    VerificationTokenProxy,
+  ],
 })
 export class ApplicationModule { }
