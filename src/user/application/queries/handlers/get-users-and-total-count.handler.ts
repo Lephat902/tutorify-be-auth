@@ -12,7 +12,7 @@ export class GetUsersAndTotalCountHandler implements IQueryHandler<GetUsersAndTo
 
     async execute(query: GetUsersAndTotalCountQuery): Promise<{ totalCount: number, results: User[] }> {
         const { filters } = query;
-        const { page, limit, role, q, gender, includeEmailNotVerified, includeBlocked } = filters;
+        const { page, limit, role, q, gender, emailVerified, isBlocked, isApproved } = filters;
 
         const options: QueryOptions = {
             limit,
@@ -38,12 +38,16 @@ export class GetUsersAndTotalCountHandler implements IQueryHandler<GetUsersAndTo
             userQuery.gender = gender;
         }
 
-        if (!includeEmailNotVerified) {
-            userQuery.emailVerified = true;
+        if (typeof emailVerified === 'boolean') {
+            userQuery.emailVerified = emailVerified;
         }
 
-        if (!includeBlocked) {
-            userQuery.isBlocked = false;
+        if (typeof isBlocked === 'boolean') {
+            userQuery.isBlocked = isBlocked;
+        }
+
+        if (typeof isApproved === 'boolean') {
+            userQuery.isApproved = isApproved;
         }
 
         const [results, totalCount] = await Promise.all([

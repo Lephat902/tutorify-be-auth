@@ -6,7 +6,8 @@ export class UserQueryDto extends IntersectionType(
 ){
     readonly q?: string;
     readonly gender?: Gender;
-    readonly includeEmailNotVerified?: boolean;
-    readonly includeBlocked?: boolean;
+    readonly emailVerified?: boolean;
+    readonly isBlocked?: boolean;
+    readonly isApproved?: boolean;
     readonly role?: UserRole;
 }
