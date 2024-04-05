@@ -14,7 +14,7 @@ export class GetUsersAndTotalCountHandler implements IQueryHandler<GetUsersAndTo
         const { filters } = query;
         const { page, limit, role, q, gender, emailVerified, isBlocked, isApproved } = filters;
 
-        const options: QueryOptions = {
+        const options: QueryOptions<User> = {
             limit,
             skip: (page - 1) * limit,
         };
@@ -24,9 +24,9 @@ export class GetUsersAndTotalCountHandler implements IQueryHandler<GetUsersAndTo
         if (q) {
             userQuery.$or = [
                 { firstName: { $regex: q, $options: 'i' } },
-                { lastName: { $regex: q, $options: 'i' } },
                 { username: { $regex: q, $options: 'i' } },
                 { email: { $regex: q, $options: 'i' } },
+                { _id: q },
             ];
         }
 

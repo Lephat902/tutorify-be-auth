@@ -59,7 +59,9 @@ export class CreateUserSagaHandler {
         }
 
         // Check if username already exists
-        const existingUsernameUser = await this.userModel.findOne({ username });
+        const existingUsernameUser = await this.userModel.findOne({
+            username: { $regex: username, $options: 'i' }
+        });
         if (existingUsernameUser) {
             throw new BadRequestException('Username already exists');
         }
