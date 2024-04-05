@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetUserByIdQuery, GetUsersAndTotalCountQuery } from './queries/impl';
-import { ApproveTutorCommand, BlockUserCommand, DeletePortfolioCommand, LoginCommand, UnblockUserCommand, VerifyEmailCommand } from './commands/impl';
+import { ApproveTutorCommand, BlockUserCommand, DeleteUserCommand, LoginCommand, RejectTutorCommand, UnblockUserCommand, VerifyEmailCommand } from './commands/impl';
 import { CreateBaseUserDto, LoginDto, UpdateBaseUserDto, UserQueryDto } from './dtos';
 import { User } from '../infrastructure/schemas';
 import { CreateUserSaga, UpdateUserSaga } from './sagas/impl';
@@ -33,10 +33,6 @@ export class UserService {
     return this.commandBus.execute(new UpdateUserSaga(id, updateUserDto));
   }
 
-  deleteSingleTutorPortfolio(id: string, portfolioId: string) {
-    return this.commandBus.execute(new DeletePortfolioCommand(id, portfolioId));
-  }
-
   login(loginDto: LoginDto) {
     return this.commandBus.execute(new LoginCommand(loginDto));
   }
@@ -45,11 +41,19 @@ export class UserService {
     return this.commandBus.execute(new ApproveTutorCommand(tutorId));
   }
 
+  rejectTutor(tutorId: string) {
+    return this.commandBus.execute(new RejectTutorCommand(tutorId));
+  }
+
   blockUser(userId: string) {
     return this.commandBus.execute(new BlockUserCommand(userId));
   }
 
   unblockUser(userId: string) {
     return this.commandBus.execute(new UnblockUserCommand(userId));
+  }
+
+  deleteUser(userId: string) {
+    return this.commandBus.execute(new DeleteUserCommand(userId));
   }
 }

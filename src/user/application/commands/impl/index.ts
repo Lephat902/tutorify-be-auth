@@ -3,4 +3,5 @@ export * from './verify-email.command';
 export * from './approve-tutor.command';
 export * from './block-user.command';
 export * from './unblock-user.command';
-export * from './delete-portfolio.command';
+export * from './reject-tutor.command';
+export * from './delete-user.command';

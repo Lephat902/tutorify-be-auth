@@ -3,7 +3,6 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { CommandHandlers } from './commands/handlers';
 import { QueryHandlers } from './queries/handlers';
 import { UserService } from './user.service';
-import { UserController } from './user.controller';
 import { InfrastructureModule } from '../infrastructure/infrastructure.module';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
@@ -11,6 +10,7 @@ import { BroadcastModule, QueueNames } from '@tutorify/shared';
 import { SagaModule } from 'nestjs-saga';
 import { SagaHandlers } from './sagas/handlers';
 import { Proxies } from './proxies';
+import { Controllers } from './controllers';
 
 @Module({
   imports: [
@@ -80,7 +80,7 @@ import { Proxies } from './proxies';
       },
     ]),
   ],
-  controllers: [UserController],
+  controllers: Controllers,
   providers: [...CommandHandlers, ...QueryHandlers, UserService, ...Proxies],
   exports: [ClientsModule, BroadcastModule, ...Proxies],
 })

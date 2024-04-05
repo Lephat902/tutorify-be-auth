@@ -1,7 +1,8 @@
 import { ApproveTutorHandler } from './approve-tutor.handler';
 import { BlockUserHandler } from './block-user.handler';
-import { DeletePortfolioHandler } from './delete-portfolio.handler';
+import { DeleteUserHandler } from './delete-user.handler';
 import { LoginHandler } from './login.handler';
+import { RejectTutorHandler } from './reject-tutor.handler';
 import { UnblockUserHandler } from './unblock-user.handler';
 import { VerifyEmailHandler } from './verify-email.handler';
 
@@ -11,5 +12,6 @@ export const CommandHandlers = [
     ApproveTutorHandler,
     BlockUserHandler,
     UnblockUserHandler,
-    DeletePortfolioHandler,
+    RejectTutorHandler,
+    DeleteUserHandler,
 ];

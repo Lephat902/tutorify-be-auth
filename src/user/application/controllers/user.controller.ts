@@ -1,9 +1,10 @@
 import { Controller, UseInterceptors } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import { UserService } from './user.service';
-import { CreateBaseUserDto, LoginDto, UpdateBaseUserDto, UserQueryDto } from './dtos';
-import { MongooseClassSerializerInterceptor } from './interceptors/mongoose-class-serializer.interceptor';
-import { User } from '../infrastructure/schemas';
+import { UserService } from '../user.service';
+import { CreateBaseUserDto, LoginDto, UpdateBaseUserDto, UserQueryDto } from '../dtos';
+import { MongooseClassSerializerInterceptor } from '../interceptors/mongoose-class-serializer.interceptor';
+import { User } from '../../infrastructure/schemas';
+
 @Controller()
 @UseInterceptors(MongooseClassSerializerInterceptor())
 export class UserController {
@@ -37,14 +38,6 @@ export class UserController {
     return this.userService.updateUser(data.id, data.updateUserDto);
   }
 
-  @MessagePattern({ cmd: 'deleteSingleTutorPortfolio' })
-  deleteSingleTutorPortfolio(data: {
-    id: string,
-    portfolioId: string,
-  }) {
-    return this.userService.deleteSingleTutorPortfolio(data.id, data.portfolioId);
-  }
-
   @MessagePattern({ cmd: 'login' })
   login(loginDto: LoginDto) {
     return this.userService.login(loginDto);
@@ -53,6 +46,11 @@ export class UserController {
   @MessagePattern({ cmd: 'approveTutor' })
   approveTutor(tutorId: string) {
     return this.userService.approveTutor(tutorId);
+  }
+
+  @MessagePattern({ cmd: 'rejectTutor' })
+  rejectTutor(tutorId: string) {
+    return this.userService.rejectTutor(tutorId);
   }
 
   @MessagePattern({ cmd: 'blockUser' })
