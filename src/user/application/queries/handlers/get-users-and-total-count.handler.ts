@@ -1,6 +1,6 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { GetUsersAndTotalCountQuery } from '../impl/get-users-and-total-count.query';
-import { FilterQuery, Model, QueryOptions } from 'mongoose';
+import { FilterQuery, Model, QueryOptions, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from 'src/user/infrastructure/schemas';
 
@@ -26,8 +26,10 @@ export class GetUsersAndTotalCountHandler implements IQueryHandler<GetUsersAndTo
                 { firstName: { $regex: q, $options: 'i' } },
                 { username: { $regex: q, $options: 'i' } },
                 { email: { $regex: q, $options: 'i' } },
-                { _id: q },
             ];
+            if (Types.ObjectId.isValid(q)) {
+                userQuery.$or.push({ _id: q });
+            }        
         }
 
         if (role) {
