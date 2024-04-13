@@ -8,7 +8,7 @@ export async function getMongoDBGeocode(addressProxy: AddressProxy, address: str
         if (geocode) {
             return {
                 type: 'Point',
-                coordinates: [parseFloat(geocode.lon), parseFloat(geocode.lat)]
+                coordinates: [geocode.lon, geocode.lat]
             }
         }
     }
