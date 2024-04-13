@@ -14,7 +14,7 @@ import {
 import { Builder } from 'builder-pattern';
 import { checkPassword } from '../../helpers';
 
-export const MAX_LOGIN_FAILURE_ALLOWED = 5;
+export const MAX_LOGIN_FAILURE_ALLOWED = 1;
 
 @CommandHandler(LoginCommand)
 export class LoginHandler implements ICommandHandler<LoginCommand> {
@@ -71,7 +71,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
       throw new UnauthorizedException('Email not verified');
     }
 
-    if (user.loginFailureCount > MAX_LOGIN_FAILURE_ALLOWED) {
+    if (user.loginFailureCount >= MAX_LOGIN_FAILURE_ALLOWED) {
       throw new UnauthorizedException(
         'Account locked due to multiple login failures',
       );
