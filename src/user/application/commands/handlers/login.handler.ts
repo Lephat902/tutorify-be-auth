@@ -14,7 +14,7 @@ import {
 import { Builder } from 'builder-pattern';
 import { checkPassword } from '../../helpers';
 
-export const MAX_LOGIN_FAILURE_ALLOWED = 1;
+export const MAX_LOGIN_FAILURE_ALLOWED = 5;
 
 @CommandHandler(LoginCommand)
 export class LoginHandler implements ICommandHandler<LoginCommand> {
