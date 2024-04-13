@@ -40,7 +40,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
       const loginAttemptsLeft =
         MAX_LOGIN_FAILURE_ALLOWED - existingUser.loginFailureCount;
       throw new UnauthorizedException(
-        `You have ${loginAttemptsLeft} login attempts left`,
+        `Invalid credentials! You have ${loginAttemptsLeft} login attempts left!`,
       );
     }
 
