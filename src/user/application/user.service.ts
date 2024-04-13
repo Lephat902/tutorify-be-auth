@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetUserByIdQuery, GetUsersAndTotalCountQuery } from './queries/impl';
-import { ApproveTutorCommand, BlockUserCommand, DeleteUserCommand, LoginCommand, RejectTutorCommand, UnblockUserCommand, VerifyEmailCommand } from './commands/impl';
+import { ApproveTutorCommand, BlockUserCommand, DeleteUserCommand, LoginCommand, RejectTutorCommand, ResetPasswordByAdminCommand, UnblockUserCommand, VerifyEmailCommand } from './commands/impl';
 import { CreateBaseUserDto, LoginDto, UpdateBaseUserDto, UserQueryDto } from './dtos';
 import { User } from '../infrastructure/schemas';
 import { CreateUserSaga, UpdateUserSaga } from './sagas/impl';
@@ -23,6 +23,10 @@ export class UserService {
 
   verifyEmail(token: string) {
     return this.commandBus.execute(new VerifyEmailCommand(token));
+  }
+
+  resetPasswordByAdmin(userId: string) {
+    return this.commandBus.execute(new ResetPasswordByAdminCommand(userId));
   }
 
   createUser(createUserDto: CreateBaseUserDto): Promise<User> {

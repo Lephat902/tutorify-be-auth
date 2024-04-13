@@ -25,6 +25,11 @@ export class UserController {
     return this.userService.verifyEmail(token);
   }
 
+  @MessagePattern({ cmd: 'resetPasswordByAdmin' })
+  resetPasswordByAdmin(userId: string) {
+    return this.userService.resetPasswordByAdmin(userId);
+  }
+
   @MessagePattern({ cmd: 'createUser' })
   createUser(createUserDto: CreateBaseUserDto) {
     return this.userService.createUser(createUserDto);
