@@ -51,9 +51,15 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
     email: string,
     username: string,
   ): Promise<UserDocument> {
-    const existingUser = await this.userModel
-      .findOne({ $or: [{ email }, { username }] })
-      .exec();
+    let existingUser = null;
+
+    if (email) {
+      existingUser = await this.userModel.findOne({ email }).exec();
+    }
+
+    if (!existingUser && username) {
+      existingUser = await this.userModel.findOne({ username }).exec();
+    }
 
     if (!existingUser) {
       throw new UnauthorizedException('User not found');
