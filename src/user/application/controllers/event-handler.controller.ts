@@ -13,6 +13,6 @@ export class EventHandler {
   handleTutorRejected(payload: TutorRejectedEventPayload) {
     const { tutorId } = payload;
     // The tutor account will then be deleted
-    return this.userService.deleteUser(tutorId);
+    return this.userService.deleteUser({ id: tutorId });
   }
 }

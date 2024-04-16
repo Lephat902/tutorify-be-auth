@@ -15,13 +15,23 @@ export class DeleteUserHandler implements ICommandHandler<DeleteUserCommand> {
     ) { }
 
     async execute(command: DeleteUserCommand) {
-        const { userId } = command;
+        const { findOneUserOptions } = command;
+        const { id, email, username } = findOneUserOptions;
 
-        // If successful, set isApproved of user entity to true
-        const user = await this.userModel.findById(userId);
-        if (!user) {
-            throw new NotFoundException(`User ${userId} not found`);
+        let user: UserDocument | null = null;
+
+        if (id || email || username) {
+            user = await this.userModel.findOne({
+                ...(id && { _id: id }),
+                ...(email && { email }),
+                ...(username && { username }),
+            });
         }
+
+        if (!user) {
+            throw new NotFoundException(`User not found`);
+        }
+
         await user.deleteOne();
 
         this.dispatchEvent(user);

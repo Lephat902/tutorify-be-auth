@@ -1,7 +1,7 @@
 import { Controller, UseInterceptors } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from '../user.service';
-import { CreateBaseUserDto, LoginDto, UpdateBaseUserDto, UserQueryDto } from '../dtos';
+import { CreateBaseUserDto, FindOneUserOptions, LoginDto, UpdateBaseUserDto, UserQueryDto } from '../dtos';
 import { MongooseClassSerializerInterceptor } from '../interceptors/mongoose-class-serializer.interceptor';
 import { User } from '../../infrastructure/schemas';
 
@@ -69,7 +69,7 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'deleteUser' })
-  deleteUser(userId: string) {
-    return this.userService.deleteUser(userId);
+  deleteUser(findOneUserOptions: FindOneUserOptions) {
+    return this.userService.deleteUser(findOneUserOptions);
   }
 }
