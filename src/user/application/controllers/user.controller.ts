@@ -67,4 +67,9 @@ export class UserController {
   unblockUser(userId: string) {
     return this.userService.unblockUser(userId);
   }
+
+  @MessagePattern({ cmd: 'deleteUser' })
+  deleteUser(userId: string) {
+    return this.userService.deleteUser(userId);
+  }
 }

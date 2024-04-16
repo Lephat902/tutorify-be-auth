@@ -3,7 +3,7 @@ import { DeleteUserCommand } from '../impl';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Builder } from 'builder-pattern';
-import { User } from 'src/user/infrastructure/schemas';
+import { User, UserDocument } from 'src/user/infrastructure/schemas';
 import { BroadcastService, UserDeletedEvent, UserDeletedEventPayload } from '@tutorify/shared';
 import { NotFoundException } from '@nestjs/common';
 
@@ -24,14 +24,15 @@ export class DeleteUserHandler implements ICommandHandler<DeleteUserCommand> {
         }
         await user.deleteOne();
 
-        this.dispatchEvent(userId);
+        this.dispatchEvent(user);
 
         return true;
     }
 
-    private dispatchEvent(userId: string) {
+    private dispatchEvent(user: UserDocument) {
         const eventPayload = Builder<UserDeletedEventPayload>()
-            .userId(userId)
+            .userId(user.id)
+            .role(user.role)
             .build();
         const event = new UserDeletedEvent(eventPayload);
         this.broadcastService.broadcastEventToAllMicroservices(event.pattern, event.payload);
