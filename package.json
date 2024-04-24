@@ -28,6 +28,8 @@
     "@nestjs/microservices": "^10.3.0",
     "@nestjs/mongoose": "^10.0.2",
     "@nestjs/platform-express": "^10.0.0",
+    "amqp-connection-manager": "^4.1.14",
+    "amqplib": "^0.10.4",
     "argon2": "^0.31.2",
     "builder-pattern": "^2.2.0",
     "class-transformer": "^0.5.1",
