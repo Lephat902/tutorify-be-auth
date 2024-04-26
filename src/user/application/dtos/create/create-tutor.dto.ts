@@ -9,6 +9,6 @@ export class CreateTutorDto extends CreateBaseUserDto {
     readonly major: string;
     readonly graduationYear: number;
     readonly proficienciesIds: string[];
-    readonly portfolios: FileUploadResponseDto[];
+    readonly tutorPortfolios: FileUploadResponseDto[];
     readonly socialProfiles?: SocialProfile[];
 }

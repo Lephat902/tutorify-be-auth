@@ -171,12 +171,12 @@ export class UpdateUserSagaHandler {
     // If old value is not empty array and new value is defined
     if (
       (currentUserState as Tutor)?.tutorPortfolios?.length
-      && (updateBaseUserDto as UpdateTutorDto)?.portfolios
+      && (updateBaseUserDto as UpdateTutorDto)?.tutorPortfolios
     ) {
       // Get the one that presents in current one but not in new one
       const portfoliosIdsToCleanUp = (currentUserState as Tutor).tutorPortfolios
         .filter(currentPortfolio =>
-          !(updateBaseUserDto as UpdateTutorDto).portfolios.some(updatedPortfolio =>
+          !(updateBaseUserDto as UpdateTutorDto).tutorPortfolios.some(updatedPortfolio =>
             currentPortfolio.id === updatedPortfolio.id
           )
         )
