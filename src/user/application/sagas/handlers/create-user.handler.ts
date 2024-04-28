@@ -96,6 +96,11 @@ export class CreateUserSagaHandler {
                 newUser = new this.tutorModel(userToSave);
                 break;
             case UserRole.STUDENT:
+                const userToSaveAsStudent = userToSave as Student;
+                // If parentEmail is not specified, it is default to the account email
+                if (!userToSaveAsStudent.parentEmail) {
+                    userToSaveAsStudent.parentEmail = userToSave.email;
+                }
                 newUser = new this.studentModel(userToSave);
                 break;
             default:
