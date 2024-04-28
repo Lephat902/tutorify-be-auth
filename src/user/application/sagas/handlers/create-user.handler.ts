@@ -128,6 +128,7 @@ export class CreateUserSagaHandler {
             .email(this.savedUser.email)
             .username(this.savedUser.username)
             .firstName(this.savedUser.firstName)
+            .middleName(this.savedUser.middleName)
             .lastName(this.savedUser.lastName)
             .role(userRole)
             .location(this.savedUser.location)
