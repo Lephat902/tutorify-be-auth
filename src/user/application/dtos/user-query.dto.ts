@@ -1,9 +1,11 @@
 import { IntersectionType } from '@nestjs/mapped-types';
-import { PaginationDto, Gender, UserRole } from '@tutorify/shared';
+import { PaginationDto, SortingDirectionDto, Gender, UserRole, UserOrder } from '@tutorify/shared';
 
 export class UserQueryDto extends IntersectionType(
-    PaginationDto, 
-){
+    PaginationDto,
+    SortingDirectionDto
+) {
+    readonly order?: UserOrder;
     readonly q?: string;
     readonly gender?: Gender;
     readonly emailVerified?: boolean;

@@ -3,6 +3,7 @@ import { GetUsersAndTotalCountQuery } from '../impl/get-users-and-total-count.qu
 import { FilterQuery, Model, QueryOptions, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from 'src/user/infrastructure/schemas';
+import { SortingDirection } from '@tutorify/shared';
 
 @QueryHandler(GetUsersAndTotalCountQuery)
 export class GetUsersAndTotalCountHandler implements IQueryHandler<GetUsersAndTotalCountQuery> {
@@ -12,11 +13,12 @@ export class GetUsersAndTotalCountHandler implements IQueryHandler<GetUsersAndTo
 
     async execute(query: GetUsersAndTotalCountQuery): Promise<{ totalCount: number, results: User[] }> {
         const { filters } = query;
-        const { page, limit, role, q, gender, emailVerified, isBlocked, isApproved } = filters;
+        const { page, limit, role, q, gender, emailVerified, isBlocked, isApproved, dir, order } = filters;
 
         const options: QueryOptions<User> = {
             limit,
             skip: (page - 1) * limit,
+            ...(order && {sort: { [order]: dir === SortingDirection.ASC ? 1 : -1 }}),
         };
 
         const userQuery: FilterQuery<User> = {};
@@ -29,7 +31,7 @@ export class GetUsersAndTotalCountHandler implements IQueryHandler<GetUsersAndTo
             ];
             if (Types.ObjectId.isValid(q)) {
                 userQuery.$or.push({ _id: q });
-            }        
+            }
         }
 
         if (role) {
@@ -53,7 +55,9 @@ export class GetUsersAndTotalCountHandler implements IQueryHandler<GetUsersAndTo
         }
 
         const [results, totalCount] = await Promise.all([
-            this.userModel.find(userQuery, null, options).exec(),
+            this.userModel
+                .find(userQuery, null, options)
+                .exec(),
             this.userModel.countDocuments(userQuery).exec()
         ]);
 
