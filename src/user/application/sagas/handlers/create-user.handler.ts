@@ -117,7 +117,7 @@ export class CreateUserSagaHandler {
     }
 
     private async step4(cmd: CreateUserSaga) {
-        await this.mailerProxy.sendUserConfirmation(this.savedUser, this.token);
+        this.mailerProxy.sendUserConfirmation(this.savedUser, this.token);
     }
 
     private step5(cmd: CreateUserSaga) {
