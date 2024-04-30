@@ -27,7 +27,7 @@ export class ApproveTutorHandler implements ICommandHandler<ApproveTutorCommand>
         }
         tutor.isApproved = true;
         tutor.approvedAt = new Date();
-        await tutor.save();
+        tutor.save();
 
         this.dispatchEvent(tutor);
 

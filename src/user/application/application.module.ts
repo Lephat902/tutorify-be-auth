@@ -1,22 +1,16 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
-import { CommandHandlers } from './commands/handlers';
-import { QueryHandlers } from './queries/handlers';
-import { UserService } from './user.service';
-import { InfrastructureModule } from '../infrastructure/infrastructure.module';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { ConfigService } from '@nestjs/config';
 import {
-  AddressProxy,
   BroadcastModule,
-  FileProxy,
-  MailerProxy,
-  QueueNames,
-  VerificationTokenProxy
+  ProxiesModule
 } from '@tutorify/shared';
 import { SagaModule } from 'nestjs-saga';
-import { SagaHandlers } from './sagas/handlers';
+import { InfrastructureModule } from '../infrastructure/infrastructure.module';
+import { CommandHandlers } from './commands/handlers';
 import { Controllers } from './controllers';
+import { QueryHandlers } from './queries/handlers';
+import { SagaHandlers } from './sagas/handlers';
+import { UserService } from './user.service';
 
 @Module({
   imports: [
@@ -27,82 +21,17 @@ import { Controllers } from './controllers';
       imports: [ApplicationModule],
       sagas: SagaHandlers,
     }),
-    ClientsModule.registerAsync([
-      {
-        name: QueueNames.MAILER,
-        inject: [ConfigService], // Inject ConfigService
-        useFactory: async (configService: ConfigService) => ({
-          transport: Transport.RMQ,
-          options: {
-            urls: [configService.get<string>('RABBITMQ_URI')],
-            queue: QueueNames.MAILER,
-            queueOptions: {
-              durable: false,
-            },
-          },
-        }),
-      },
-      {
-        name: QueueNames.VERIFICATION_TOKEN,
-        inject: [ConfigService], // Inject ConfigService
-        useFactory: async (configService: ConfigService) => ({
-          transport: Transport.RMQ,
-          options: {
-            urls: [configService.get<string>('RABBITMQ_URI')],
-            queue: QueueNames.VERIFICATION_TOKEN,
-            queueOptions: {
-              durable: false,
-            },
-          },
-        }),
-      },
-      {
-        name: QueueNames.FILE,
-        inject: [ConfigService], // Inject ConfigService
-        useFactory: async (configService: ConfigService) => ({
-          transport: Transport.RMQ,
-          options: {
-            urls: [configService.get<string>('RABBITMQ_URI')],
-            queue: QueueNames.FILE,
-            queueOptions: {
-              durable: false,
-            },
-          },
-        }),
-      },
-      {
-        name: QueueNames.ADDRESS,
-        inject: [ConfigService], // Inject ConfigService
-        useFactory: async (configService: ConfigService) => ({
-          transport: Transport.RMQ,
-          options: {
-            urls: [configService.get<string>('RABBITMQ_URI')],
-            queue: QueueNames.ADDRESS,
-            queueOptions: {
-              durable: false,
-            },
-          },
-        }),
-      },
-    ]),
+    ProxiesModule,
   ],
   controllers: Controllers,
   providers: [
     ...CommandHandlers,
     ...QueryHandlers,
     UserService,
-    AddressProxy,
-    FileProxy,
-    MailerProxy,
-    VerificationTokenProxy,
   ],
   exports: [
-    ClientsModule,
     BroadcastModule,
-    AddressProxy,
-    FileProxy,
-    MailerProxy,
-    VerificationTokenProxy,
+    ProxiesModule,
   ],
 })
 export class ApplicationModule { }

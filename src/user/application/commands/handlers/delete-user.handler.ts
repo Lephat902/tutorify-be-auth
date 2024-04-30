@@ -32,7 +32,7 @@ export class DeleteUserHandler implements ICommandHandler<DeleteUserCommand> {
             throw new NotFoundException(`User not found`);
         }
 
-        await user.deleteOne();
+        user.deleteOne();
 
         this.dispatchEvent(user);
 

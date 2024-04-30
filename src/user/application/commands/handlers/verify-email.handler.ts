@@ -1,33 +1,30 @@
-import { ICommandHandler, CommandHandler } from '@nestjs/cqrs';
-import { VerifyEmailCommand } from '../impl';
-import { ClientProxy } from '@nestjs/microservices';
-import { Inject } from '@nestjs/common';
-import { firstValueFrom } from 'rxjs';
-import { Model } from 'mongoose';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from 'src/user/infrastructure/schemas';
-import { BroadcastService, QueueNames, UserEmailVerifiedEvent, UserEmailVerifiedEventPayload } from '@tutorify/shared';
+import { BroadcastService, UserEmailVerifiedEvent, UserEmailVerifiedEventPayload, VerificationTokenProxy } from '@tutorify/shared';
 import { Builder } from 'builder-pattern';
+import { Model } from 'mongoose';
+import { User } from 'src/user/infrastructure/schemas';
+import { VerifyEmailCommand } from '../impl';
 
 @CommandHandler(VerifyEmailCommand)
 export class VerifyEmailHandler implements ICommandHandler<VerifyEmailCommand> {
     constructor(
         @InjectModel(User.name) private readonly userModel: Model<User>,
         private readonly broadcastService: BroadcastService,
-        @Inject(QueueNames.VERIFICATION_TOKEN) private readonly client: ClientProxy,
+        private readonly verificationTokenProxy: VerificationTokenProxy,
     ) { }
 
     async execute(command: VerifyEmailCommand) {
         const { token } = command;
 
         // If verification is successful, userId is returned
-        const userId = await firstValueFrom(this.client.send<string>({ cmd: 'verify' }, token));
+        const userId = await this.verificationTokenProxy.verify(token);
 
         // If successful, set emailVerified of user entity to true
         const user = await this.userModel.findById(userId);
         if (user) {
             user.emailVerified = true;
-            await user.save();
+            user.save();
         }
 
         this.dispatchEvent(userId);

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetUserByIdQuery, GetUsersAndTotalCountQuery } from './queries/impl';
-import { ApproveTutorCommand, BlockUserCommand, DeleteUserCommand, LoginCommand, RejectTutorCommand, ResetPasswordByAdminCommand, UnblockUserCommand, VerifyEmailCommand } from './commands/impl';
-import { CreateBaseUserDto, FindOneUserOptions, LoginDto, UpdateBaseUserDto, UserQueryDto } from './dtos';
+import { ApproveTutorCommand, BlockUserCommand, DeleteUserCommand, LoginCommand, RejectTutorCommand, RequestResetPasswordCommand, ResetPasswordByAdminCommand, ResetPasswordCommand, UnblockUserCommand, VerifyEmailCommand } from './commands/impl';
+import { CreateBaseUserDto, FindOneUserOptions, LoginDto, ResetPasswordDto, UpdateBaseUserDto, UserQueryDto } from './dtos';
 import { User } from '../infrastructure/schemas';
 import { CreateUserSaga, UpdateUserSaga } from './sagas/impl';
 
@@ -59,5 +59,13 @@ export class UserService {
 
   deleteUser(findOneUserOptions: FindOneUserOptions) {
     return this.commandBus.execute(new DeleteUserCommand(findOneUserOptions));
+  }
+
+  requestResetPassword(email: string) {
+    return this.commandBus.execute(new RequestResetPasswordCommand(email));
+  }
+
+  resetPassword(resetPasswordDto: ResetPasswordDto) {
+    return this.commandBus.execute(new ResetPasswordCommand(resetPasswordDto));
   }
 }

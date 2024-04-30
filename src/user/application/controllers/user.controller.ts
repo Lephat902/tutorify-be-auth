@@ -1,7 +1,7 @@
 import { Controller, UseInterceptors } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from '../user.service';
-import { CreateBaseUserDto, FindOneUserOptions, LoginDto, UpdateBaseUserDto, UserQueryDto } from '../dtos';
+import { CreateBaseUserDto, FindOneUserOptions, LoginDto, ResetPasswordDto, UpdateBaseUserDto, UserQueryDto } from '../dtos';
 import { MongooseClassSerializerInterceptor } from '../interceptors/mongoose-class-serializer.interceptor';
 import { User } from '../../infrastructure/schemas';
 
@@ -71,5 +71,15 @@ export class UserController {
   @MessagePattern({ cmd: 'deleteUser' })
   deleteUser(findOneUserOptions: FindOneUserOptions) {
     return this.userService.deleteUser(findOneUserOptions);
+  }
+
+  @MessagePattern({ cmd: 'requestResetPassword' })
+  requestResetPassword(email: string) {
+    return this.userService.requestResetPassword(email);
+  }
+
+  @MessagePattern({ cmd: 'resetPassword' })
+  resetPassword(resetPasswordDto: ResetPasswordDto) {
+    return this.userService.resetPassword(resetPasswordDto);
   }
 }
