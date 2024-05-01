@@ -116,7 +116,7 @@ export class CreateUserSagaHandler {
         this.token = await this.verificationTokenProxy.createNewToken(this.savedUser._id.toString());
     }
 
-    private async step4(cmd: CreateUserSaga) {
+    private step4(cmd: CreateUserSaga) {
         this.mailerProxy.sendUserConfirmation(this.savedUser, this.token);
     }
 
