@@ -79,8 +79,10 @@ export class CreateUserSagaHandler {
         const { password, role, gender = null, address, wardId } = createBaseUserDto;
 
         // Hash the provided password using argon2
-        const hashedPassword = await argon2.hash(password);
-        const location = await getMongoDBGeocode(this.addressProxy, address, wardId);
+        const [hashedPassword, location] = await Promise.all([
+            argon2.hash(password),
+            getMongoDBGeocode(this.addressProxy, address, wardId),
+        ]);
 
         const userToSave = {
             ...createBaseUserDto,
@@ -138,10 +140,12 @@ export class CreateUserSagaHandler {
 
         if (userRole === UserRole.TUTOR) {
             const createTutorDto = createBaseUserDto as CreateTutorDto;
-            eventPayload.proficienciesIds.concat(createTutorDto.proficienciesIds);
+            if (Array.isArray(createTutorDto.proficienciesIds))
+                eventPayload.proficienciesIds.push(...createTutorDto.proficienciesIds);
         } else if (userRole === UserRole.STUDENT) {
             const createStudentDto = createBaseUserDto as CreateStudentDto;
-            eventPayload.interestedClassCategoryIds.concat(createStudentDto.interestedClassCategoryIds);
+            if (Array.isArray(createStudentDto.interestedClassCategoryIds))
+                eventPayload.interestedClassCategoryIds.push(...createStudentDto.interestedClassCategoryIds);
         }
 
         const event = new UserCreatedEvent(eventPayload);

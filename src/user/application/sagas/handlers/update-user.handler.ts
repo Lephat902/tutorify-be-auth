@@ -134,16 +134,18 @@ export class UpdateUserSagaHandler {
       .lastName(this.savedUser.lastName)
       .role(userRole)
       .location(this.savedUser.location)
+      .proficienciesIds([])
+      .interestedClassCategoryIds([])
       .build();
 
     if (userRole === UserRole.TUTOR) {
       const updateTutorDto = updateBaseUserDto as UpdateTutorDto;
       if (Array.isArray(updateTutorDto.proficienciesIds))
-        eventPayload.proficienciesIds = updateTutorDto.proficienciesIds;
+        eventPayload.proficienciesIds.push(...updateTutorDto.proficienciesIds);
     } else if (userRole === UserRole.STUDENT) {
       const updateStudentDto = updateBaseUserDto as UpdateStudentDto;
       if (Array.isArray(updateStudentDto.interestedClassCategoryIds))
-        eventPayload.interestedClassCategoryIds = updateStudentDto.interestedClassCategoryIds;
+        eventPayload.interestedClassCategoryIds.push(...updateStudentDto.interestedClassCategoryIds);
     }
 
     const event = new UserUpdatedEvent(eventPayload);
