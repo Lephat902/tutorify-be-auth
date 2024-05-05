@@ -108,7 +108,11 @@ export class UpdateUserSagaHandler {
 
     // There is changes in address
     if (address !== undefined || wardId !== undefined) {
-      this.existingUser.location = await getMongoDBGeocode(this.addressProxy, address, wardId);
+      // Mean to reset address
+      if (!address && !wardId)
+        this.existingUser.location = null;
+      else
+        this.existingUser.location = await getMongoDBGeocode(this.addressProxy, address, wardId);
     }
 
     // Update the existingUser fields
@@ -126,6 +130,19 @@ export class UpdateUserSagaHandler {
   private step3(cmd: UpdateUserSaga) {
     const { updateBaseUserDto } = cmd;
     const userRole = this.savedUser.role;
+    let proficienciesIds: string[],
+      interestedClassCategoryIds: string[];
+
+    if (userRole === UserRole.TUTOR) {
+      const updateTutorDto = updateBaseUserDto as UpdateTutorDto;
+      if (Array.isArray(updateTutorDto.proficienciesIds))
+        proficienciesIds = updateTutorDto.proficienciesIds;
+    } else if (userRole === UserRole.STUDENT) {
+      const updateStudentDto = updateBaseUserDto as UpdateStudentDto;
+      if (Array.isArray(updateStudentDto.interestedClassCategoryIds))
+        interestedClassCategoryIds = updateStudentDto.interestedClassCategoryIds;
+    }
+
     const eventPayload = Builder<UserUpdatedEventPayload>()
       .userId(this.savedUser._id.toString())
       .email(this.savedUser.email)
@@ -134,19 +151,9 @@ export class UpdateUserSagaHandler {
       .lastName(this.savedUser.lastName)
       .role(userRole)
       .location(this.savedUser.location)
-      .proficienciesIds([])
-      .interestedClassCategoryIds([])
+      .proficienciesIds(proficienciesIds)
+      .interestedClassCategoryIds(interestedClassCategoryIds)
       .build();
-
-    if (userRole === UserRole.TUTOR) {
-      const updateTutorDto = updateBaseUserDto as UpdateTutorDto;
-      if (Array.isArray(updateTutorDto.proficienciesIds))
-        eventPayload.proficienciesIds.push(...updateTutorDto.proficienciesIds);
-    } else if (userRole === UserRole.STUDENT) {
-      const updateStudentDto = updateBaseUserDto as UpdateStudentDto;
-      if (Array.isArray(updateStudentDto.interestedClassCategoryIds))
-        eventPayload.interestedClassCategoryIds.push(...updateStudentDto.interestedClassCategoryIds);
-    }
 
     const event = new UserUpdatedEvent(eventPayload);
     this.broadcastService.broadcastEventToAllMicroservices(

@@ -125,6 +125,19 @@ export class CreateUserSagaHandler {
     private step5(cmd: CreateUserSaga) {
         const { createBaseUserDto } = cmd;
         const userRole = this.savedUser.role;
+        let proficienciesIds: string[],
+            interestedClassCategoryIds: string[];
+
+        if (userRole === UserRole.TUTOR) {
+            const createTutorDto = createBaseUserDto as CreateTutorDto;
+            if (Array.isArray(createTutorDto.proficienciesIds))
+                proficienciesIds = createTutorDto.proficienciesIds;
+        } else if (userRole === UserRole.STUDENT) {
+            const createStudentDto = createBaseUserDto as CreateStudentDto;
+            if (Array.isArray(createStudentDto.interestedClassCategoryIds))
+                interestedClassCategoryIds = createStudentDto.interestedClassCategoryIds;
+        }
+
         const eventPayload = Builder<UserCreatedEventPayload>()
             .userId(this.savedUser._id.toString())
             .email(this.savedUser.email)
@@ -134,19 +147,9 @@ export class CreateUserSagaHandler {
             .lastName(this.savedUser.lastName)
             .role(userRole)
             .location(this.savedUser.location)
-            .proficienciesIds([])
-            .interestedClassCategoryIds([])
+            .proficienciesIds(proficienciesIds)
+            .interestedClassCategoryIds(interestedClassCategoryIds)
             .build();
-
-        if (userRole === UserRole.TUTOR) {
-            const createTutorDto = createBaseUserDto as CreateTutorDto;
-            if (Array.isArray(createTutorDto.proficienciesIds))
-                eventPayload.proficienciesIds.push(...createTutorDto.proficienciesIds);
-        } else if (userRole === UserRole.STUDENT) {
-            const createStudentDto = createBaseUserDto as CreateStudentDto;
-            if (Array.isArray(createStudentDto.interestedClassCategoryIds))
-                eventPayload.interestedClassCategoryIds.push(...createStudentDto.interestedClassCategoryIds);
-        }
 
         const event = new UserCreatedEvent(eventPayload);
         this.broadcastService.broadcastEventToAllMicroservices(event.pattern, event.payload);
