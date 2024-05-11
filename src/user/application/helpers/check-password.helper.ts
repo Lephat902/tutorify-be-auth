@@ -12,6 +12,6 @@ export async function checkPassword(user: UserDocument, password: string) {
 
     // Reset login failure count on successful login
     user.loginFailureCount = 0;
-    user.save();
+    await user.save();
     return true;
 }
