@@ -117,16 +117,11 @@ export class UpdateUserSagaHandler {
 
     // Update the existingUser fields
     Object.assign(this.existingUser, updateBaseUserDto);
-    console.log("hello 1 ", updateBaseUserDto)
     
     if (updateBaseUserDto.password !== undefined) {
-      console.log("hello ", updateBaseUserDto)
       const hashedPassword = await argon2.hash(updateBaseUserDto.password);
       this.existingUser.password = hashedPassword;
-      console.log("bye ", this.existingUser)
     }
-
-    console.log("bye 1 ", this.existingUser)
 
     // Save the updated user to the database
     this.savedUser = await this.existingUser.save();
