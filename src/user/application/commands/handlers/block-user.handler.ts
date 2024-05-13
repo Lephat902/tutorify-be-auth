@@ -20,7 +20,7 @@ export class BlockUserHandler implements ICommandHandler<BlockUserCommand> {
         const user = await this.userModel.findById(userId);
         if (user) {
             user.isBlocked = true;
-            user.save();
+            await user.save();
         }
 
         this.dispatchEvent(userId);

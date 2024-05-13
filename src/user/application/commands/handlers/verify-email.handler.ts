@@ -24,7 +24,7 @@ export class VerifyEmailHandler implements ICommandHandler<VerifyEmailCommand> {
         const user = await this.userModel.findById(userId);
         if (user) {
             user.emailVerified = true;
-            user.save();
+            await user.save();
         }
 
         this.dispatchEvent(userId);

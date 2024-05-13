@@ -27,7 +27,7 @@ export class ResetPasswordHandler implements ICommandHandler<ResetPasswordComman
         }
         user.password = await argon2.hash(newPassword);
         user.loginFailureCount = 0;
-        user.save();
+        await user.save();
 
         return true;
     }

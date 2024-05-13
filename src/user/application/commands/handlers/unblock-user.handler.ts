@@ -20,7 +20,7 @@ export class UnblockUserHandler implements ICommandHandler<UnblockUserCommand> {
         const user = await this.userModel.findById(userId);
         if (user) {
             user.isBlocked = false;
-            user.save();
+            await user.save();
         }
 
         this.dispatchEvent(userId);

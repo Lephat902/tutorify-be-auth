@@ -26,7 +26,7 @@ export class ResetPasswordByAdminHandler implements ICommandHandler<ResetPasswor
         }
         user.password = await argon2.hash(generatedPassword);
         user.loginFailureCount = 0;
-        user.save();
+        await user.save();
 
         this.mailerProxy.sendNewPassword(user, generatedPassword);
 
