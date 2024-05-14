@@ -3,7 +3,7 @@ import { User } from "src/user/infrastructure/schemas";
 
 export async function getMongoDBGeocode(addressProxy: AddressProxy, address: string, wardId: string): Promise<User['location']> {
     // Get geocode if address is provided
-    if (address && wardId) {
+    if (wardId) {
         const geocode = await addressProxy.getGeocodeFromAddressAndWardId(address, wardId);
         if (geocode) {
             return {

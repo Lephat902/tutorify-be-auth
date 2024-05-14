@@ -109,7 +109,7 @@ export class UpdateUserSagaHandler {
     // There is changes in address
     if (address !== undefined || wardId !== undefined) {
       // Mean to reset address
-      if (!address && !wardId)
+      if (!wardId)
         this.existingUser.location = null;
       else
         this.existingUser.location = await getMongoDBGeocode(this.addressProxy, address, wardId);
