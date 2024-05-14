@@ -82,4 +82,9 @@ export class UserController {
   resetPassword(resetPasswordDto: ResetPasswordDto) {
     return this.userService.resetPassword(resetPasswordDto);
   }
+
+  @MessagePattern({ cmd: 'cleanupTestAccount' })
+  cleanupTestAccount() {
+    return this.userService.cleanupTestAccount();
+  }
 }

@@ -1,5 +1,6 @@
 import { ApproveTutorHandler } from './approve-tutor.handler';
 import { BlockUserHandler } from './block-user.handler';
+import { CleanupTestAccountHandler } from './cleanup-test-account.handler';
 import { DeleteUserHandler } from './delete-user.handler';
 import { LoginHandler } from './login.handler';
 import { RejectTutorHandler } from './reject-tutor.handler';
@@ -20,4 +21,5 @@ export const CommandHandlers = [
     ResetPasswordByAdminHandler,
     RequestResetPasswordHandler,
     ResetPasswordHandler,
+    CleanupTestAccountHandler,
 ];

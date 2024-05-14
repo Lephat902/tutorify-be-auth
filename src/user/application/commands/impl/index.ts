@@ -8,3 +8,4 @@ export * from './delete-user.command';
 export * from './reset-password-by-admin.command';
 export * from './request-reset-password.command';
 export * from './reset-password.command';
+export * from './cleanup-test-account.command';
