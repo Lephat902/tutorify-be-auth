@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { GetUserByIdQuery, GetUsersAndTotalCountQuery } from './queries/impl';
+import { GetUserByIdQuery, GetUserStatisticByYearQuery, GetUsersAndTotalCountQuery } from './queries/impl';
 import { ApproveTutorCommand, BlockUserCommand, CleanupTestAccountCommand, DeleteUserCommand, LoginCommand, RejectTutorCommand, RequestResetPasswordCommand, ResetPasswordByAdminCommand, ResetPasswordCommand, UnblockUserCommand, VerifyEmailCommand } from './commands/impl';
-import { CreateBaseUserDto, FindOneUserOptions, LoginDto, ResetPasswordDto, UpdateBaseUserDto, UserQueryDto } from './dtos';
+import { CreateBaseUserDto, FindOneUserOptions, LoginDto, ResetPasswordDto, UpdateBaseUserDto, UserQueryDto, UserStatisticByYearDto } from './dtos';
 import { User } from '../infrastructure/schemas';
 import { CreateUserSaga, UpdateUserSaga } from './sagas/impl';
 
@@ -71,5 +71,9 @@ export class UserService {
 
   cleanupTestAccount() {
     return this.commandBus.execute(new CleanupTestAccountCommand());
+  }
+
+  getUserStatisticByYear(userStatisticByYearDto: UserStatisticByYearDto) {
+    return this.queryBus.execute(new GetUserStatisticByYearQuery(userStatisticByYearDto));
   }
 }

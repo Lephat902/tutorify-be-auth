@@ -1,7 +1,7 @@
 import { Controller, UseInterceptors } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from '../user.service';
-import { CreateBaseUserDto, FindOneUserOptions, LoginDto, ResetPasswordDto, UpdateBaseUserDto, UserQueryDto } from '../dtos';
+import { CreateBaseUserDto, FindOneUserOptions, LoginDto, ResetPasswordDto, UpdateBaseUserDto, UserQueryDto, UserStatisticByYearDto } from '../dtos';
 import { MongooseClassSerializerInterceptor } from '../interceptors/mongoose-class-serializer.interceptor';
 import { User } from '../../infrastructure/schemas';
 
@@ -86,5 +86,10 @@ export class UserController {
   @MessagePattern({ cmd: 'cleanupTestAccount' })
   cleanupTestAccount() {
     return this.userService.cleanupTestAccount();
+  }
+
+  @MessagePattern({ cmd: 'getUserStatisticByYear' })
+  getUserStatisticByYear(userStatisticByYearDto: UserStatisticByYearDto) {
+    return this.userService.getUserStatisticByYear(userStatisticByYearDto);
   }
 }
