@@ -1,7 +1,7 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { InjectModel } from '@nestjs/mongoose';
 import { DataPresentationOption, StatisticTimeIntervalOption, UserRole, getQuarter } from '@tutorify/shared';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { User } from 'src/user/infrastructure/schemas';
 import { GetUserStatisticByYearQuery } from '../impl';
 
@@ -12,31 +12,38 @@ export class GetUserStatisticByYearHandler implements IQueryHandler<GetUserStati
     ) { }
 
     async execute(query: GetUserStatisticByYearQuery) {
-        const { year, timeIntervalOption, presentationOption, roles, isApproved } = query.userStatisticByYearDto;
+        const { userStatisticByYearDto } = query;
+        const { timeIntervalOption, presentationOption, shortMonthName } = query.userStatisticByYearDto;
 
-        const matchExpression = this.buildMatchExpression(year, roles, isApproved);
+        const userQuery: FilterQuery<User> = {};
+        this.filterByCreationYear(userQuery, userStatisticByYearDto.year);
+        this.filterByRoles(userQuery, userStatisticByYearDto.roles);
+        this.filterByApprovementStatus(userQuery, userStatisticByYearDto.isApproved);
+
         const groupByExpression = this.buildGroupByExpression(timeIntervalOption);
 
-        return this.getStatistics(matchExpression, groupByExpression, presentationOption);
+        return this.getStatistics(userQuery, groupByExpression, presentationOption, shortMonthName);
     }
 
-    private buildMatchExpression(year: number, roles?: UserRole[], isApproved?: boolean) {
-        const matchExpression: any = {
-            createdAt: {
+    private filterByCreationYear(query: FilterQuery<User>, year: number) {
+        if (typeof year === 'number') {
+            query.createdAt = {
                 $gte: new Date(`${year}-01-01T00:00:00.000Z`),
                 $lt: new Date(`${year + 1}-01-01T00:00:00.000Z`),
-            },
-        };
+            };
+        }
+    }
 
+    private filterByRoles(query: FilterQuery<User>, roles: UserRole[]) {
         if (roles?.length) {
-            matchExpression.role = { $in: roles };
+            query.role = { $in: roles };
         }
+    }
 
+    private filterByApprovementStatus(query: FilterQuery<User>, isApproved: boolean) {
         if (typeof isApproved === 'boolean') {
-            matchExpression.isApproved = isApproved;
+            query.isApproved = isApproved;
         }
-
-        return matchExpression;
     }
 
     private buildGroupByExpression(timeIntervalOption: StatisticTimeIntervalOption) {
@@ -51,44 +58,42 @@ export class GetUserStatisticByYearHandler implements IQueryHandler<GetUserStati
     }
 
     private async getStatistics(
-        matchExpression: object,
+        matchExpression: FilterQuery<User>,
         groupByExpression: object,
         presentationOption: DataPresentationOption,
+        shortMonthName: boolean,
     ) {
-        const rawStatistics = await this.userModel.aggregate([
+        let rawStatistics = await this.userModel.aggregate([
             { $match: matchExpression },
             { $group: { _id: groupByExpression, count: { $sum: 1 } } },
             { $project: { timeIntervalIndex: '$_id', count: 1, _id: 0 } },
+            { $sort: { timeIntervalIndex: 1 } },
         ]);
-
-        // Initialize an array with the length equal to the number of months or quarters in the year
-        const timeIntervalCount = groupByExpression['$dateTrunc'].unit === StatisticTimeIntervalOption.QUARTER ? 4 : 12;
-        let statistics = Array(timeIntervalCount).fill({ count: "0", timeIntervalIndex: 0 });
 
         // Fill in the data where it exists
         for (const stat of rawStatistics) {
-            const index = groupByExpression['$dateTrunc'].unit === StatisticTimeIntervalOption.QUARTER 
-                ? getQuarter(stat.timeIntervalIndex) - 1 
-                : stat.timeIntervalIndex.getMonth();
-            statistics[index] = stat;
+            const monthNameOption = shortMonthName ? 'short' : 'long';
+            const index = groupByExpression['$dateTrunc'].unit === StatisticTimeIntervalOption.QUARTER
+                ? 'Q' + getQuarter(stat.timeIntervalIndex)
+                : (stat.timeIntervalIndex as Date).toLocaleString('en-US', { month: monthNameOption });
+            stat.timeIntervalIndex = index;
         }
-        
-        // Convert timeIntervalIndex to its index in the sequence
-        statistics = statistics.map((stat, index) => ({
-            ...stat,
-            timeIntervalIndex: index,
-        }));
 
         if (presentationOption === DataPresentationOption.ACCUMULATION) {
-            statistics = statistics.reduce((acc, cur, i) => {
-                const prev = acc[i - 1] ? parseInt(acc[i - 1].count) : 0;
-                const current = parseInt(cur.count);
-                cur.count = (prev + current).toString();
-                acc.push(cur);
-                return acc;
-            }, []);
+            rawStatistics = this.accumulateResults(rawStatistics);
         }
 
-        return statistics;
+        return rawStatistics;
+    }
+
+    private accumulateResults(results: any[]) {
+        return results.reduce((acc, cur, i) => {
+            const prev = acc[i - 1] ? parseInt(acc[i - 1].count) : 0;
+            const current = parseInt(cur.count);
+            cur.count = (prev + current).toString();
+            acc.push(cur);
+            return acc;
+        }, []);
     }
 }
+
