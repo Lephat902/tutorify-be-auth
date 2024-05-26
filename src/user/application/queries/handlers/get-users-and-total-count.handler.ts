@@ -1,9 +1,9 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { GetUsersAndTotalCountQuery } from '../impl/get-users-and-total-count.query';
-import { FilterQuery, Model, QueryOptions, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from 'src/user/infrastructure/schemas';
 import { SortingDirection } from '@tutorify/shared';
+import { FilterQuery, Model, QueryOptions, Types } from 'mongoose';
+import { User } from 'src/user/infrastructure/schemas';
+import { GetUsersAndTotalCountQuery } from '../impl/get-users-and-total-count.query';
 
 @QueryHandler(GetUsersAndTotalCountQuery)
 export class GetUsersAndTotalCountHandler implements IQueryHandler<GetUsersAndTotalCountQuery> {
@@ -13,12 +13,12 @@ export class GetUsersAndTotalCountHandler implements IQueryHandler<GetUsersAndTo
 
     async execute(query: GetUsersAndTotalCountQuery): Promise<{ totalCount: number, results: User[] }> {
         const { filters } = query;
-        const { page, limit, role, q, gender, emailVerified, isBlocked, isApproved, dir, order } = filters;
+        const { page, limit, role, q, gender, emailVerified, isBlocked, isApproved, dir, order, createdAtMin, createdAtMax } = filters;
 
         const options: QueryOptions<User> = {
             limit,
             skip: (page - 1) * limit,
-            ...(order && {sort: { [order]: dir === SortingDirection.ASC ? 1 : -1 }}),
+            ...(order && { sort: { [order]: dir === SortingDirection.ASC ? 1 : -1 } }),
         };
 
         const userQuery: FilterQuery<User> = {};
@@ -52,6 +52,14 @@ export class GetUsersAndTotalCountHandler implements IQueryHandler<GetUsersAndTo
 
         if (typeof isApproved === 'boolean') {
             userQuery.isApproved = isApproved;
+        }
+
+        if (createdAtMin) {
+            userQuery.createdAt = { $gte: new Date(createdAtMin) };
+        }
+
+        if (createdAtMax) {
+            userQuery.createdAt = { ...userQuery.createdAt, $lte: new Date(createdAtMax) };
         }
 
         const [results, totalCount] = await Promise.all([

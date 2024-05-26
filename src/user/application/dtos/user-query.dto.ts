@@ -12,4 +12,6 @@ export class UserQueryDto extends IntersectionType(
     readonly isBlocked?: boolean;
     readonly isApproved?: boolean;
     readonly role?: UserRole;
+    readonly createdAtMin: Date;
+    readonly createdAtMax: Date;  
 }
